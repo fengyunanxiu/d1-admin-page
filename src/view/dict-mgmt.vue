@@ -627,7 +627,7 @@
 
                 // dataLoading 的写法
                 this.fullTabLoading = true;
-                let url = this.baseUrl + "d1-core/d1/dict/manage/base";
+                let url = this.baseUrl + "d1-core/d1/dict/manage/domain";
                 this.http.post(url,parameterList).then(resp =>{
                     this.fullTabLoading =false;
                     //请求成功，需要重新loading

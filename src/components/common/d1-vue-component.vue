@@ -600,7 +600,7 @@
                 }
               }
               //单个时间插件
-              else if (item.form_field_query_type === QueryFormType.DATE) {  //判断form表字段中的类型
+              else if (item.form_field_query_type === QueryFormType.SINGLE_DATE) {  //判断form表字段中的类型
                 //处理report date
                 if (item.field_value) {
                   let value = this.timeFormatConvert(item.field_value);//返回日期类型格式的值 输入的值 2019-06-14
@@ -614,7 +614,20 @@
                   }
                 }
 
-              } else if (typeof item.field_value === 'object') {  //输入类型为object
+              } else if(item.form_field_query_type === QueryFormType.SINGLE_DATETIME){
+                if (item.field_value) {
+                  let value = this.dateTimeFormatConvert2(item.field_value);//返回日期类型格式的值 输入的值 2019-06-14
+
+                  if (param === '') {
+                    param = item.db_field_name + '=' + encodeURIComponent(value); //db_field_name: inventory_report_date value=2019-06-14
+                    this.specialParam[item.db_field_name] = value;   //赋值，对象key 为inventory_report_date    value=2019-06-14
+                  } else {
+                    param = param + '&' + item.db_field_name + '=' + encodeURIComponent(value);
+                    this.specialParam[item.db_field_name] = value;
+                  }
+                }
+              }
+              else if (typeof item.field_value === 'object') {  //输入类型为object
                 let specialparamValues = [];
                 this.specialParam[item.db_field_name] = specialparamValues;  //放入数组
                 for (let j = 0; j < item.field_value.length; j++) {
@@ -1066,7 +1079,7 @@
           return fmt;
         }
 
-        var dd = new Date(od).format(("yyyy-MM-dd HH:mm:ss"));
+        var dd = new Date(od).format(("yyyy-MM-dd hh:mm:ss"));
         return dd.toString();
       },
 
