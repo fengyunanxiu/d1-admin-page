@@ -285,7 +285,6 @@
         <template v-if="showTableSelection">
           <el-table-column type="selection" width="46"></el-table-column>
         </template>
-
         <el-table-column
           label="Operation"
           :width="definitionTableButtonWidth" v-if="showTableOperationButton">

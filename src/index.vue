@@ -20,6 +20,9 @@
                         <el-col :xs="12" :sm="8" :md="6" :lg="4">
                             <el-input v-model="dsFacetKey" placeholder="data facet key" size="small"></el-input>
                         </el-col>
+                        <el-col :xs="16" :sm="12" :md="12" :lg="8">
+                            <el-input v-model="d1Options" type="textarea" size="small"></el-input>
+                        </el-col>
                         <el-col :xs="11" :sm="11" :md="11" :lg="11">
 
                             <el-button type="primary" size="small" @click="handleQuery"><i class="fa fa-search"
@@ -31,7 +34,7 @@
                     </div>
 
 
-                    <div class="area-two" v-show="showD1VueComponent">
+                    <div class="area-two" v-if="showD1VueComponent">
                         <div class ="area">
                             <d1-vue-component ref="d1VueComponet" :options="generateOption"
                                 @onToolbarButtonClick="handleToolbarButtonClick"
@@ -52,6 +55,51 @@
 <script>
     import d1VueComponent from '@/components/common/d1-vue-component.vue'
 
+    let generateOption = {
+        queryUrl: window.baseConfig.baseUrl + '/d1-client/d1/client/executeQuery?' ,
+            exportUrl: window.baseConfig.baseUrl + '/d1-client/d1/query-suite/executeQuery?',
+            showExportButton: true,
+            pageSize: 10,
+            tableData: [{}],
+            dataFacetKey: '',
+            showForm:true,
+            showTableSelection: true,
+            loadFormTableOnCreate:false,
+            pageSettingData: {
+            form: [{}],
+                table: [{}]
+            },
+        openform:true,
+        toolbarPlaceholder:["This is Description"],
+        loadingPrompt: "Loading, Please wait...",
+        showToolbarButtonList: true,
+
+            toolbarButtonList: [
+            {
+                label: 'Delete', //按钮显示的名称
+                type: 'danger',  //按钮的类型,默认空,支持  primary，success，info，warning，danger
+                name: 'delete', // 用户点击时返回的组件
+                elColWidth: 3, //按钮的占位
+            }
+        ],
+            showTableOperationButton: true,
+            tableOperationButtonList: [
+            {
+                label: 'download', //按钮显示的名称
+                type: '',  //按钮的类型,默认空,支持  primary，success，info，warning，danger
+                name: 'download', // 按钮点击时间触发的函数名称
+                width: 150
+            }
+        ],
+        tableCellDataLink: [{
+            db_field_name: 'batch_id', //需要增加a标签的字段名
+            field_label: [""], //a标签显示的限制值
+            dialogDisplaysValueFromFields: '', // 对话框的说明来源于字段
+            needCustomProcess: true,  //如果设置为ture,请监听onTableCellDataClick函数
+            name:''
+        }]
+    };
+
     export default {
         name:'commonView',
         components: {
@@ -65,53 +113,14 @@
 
         data() {
             return {
-                generateOption: {
-                    queryUrl: this.baseUrl + '/d1-client/d1/client/executeQuery?' ,
-                    importUrl: '',
-                    exportUrl: this.baseUrl + '/d1-client/d1/query-suite/executeQuery?',
-                    deleteUrl: '',
-                    showExportButton: true,
-                    modifyUrl: '',
-                    pageSize: 10,
-                    tableData: [{}],
-                    dataFacetKey: '',
-                    loadTableDataAfterLoadFormTableAtOnce:false,
-                    loadFormTableOnCreate: false,
-                    pageSettingData: {
-                        form: [{}],
-                        table: [{}]
-                    },
-                    showToolbarButtonList: false,
-                    showTableSelection: false,
-                    toolbarButtonList: [
-                        {
-                            label: 'Delete', //按钮显示的名称
-                            type: 'danger',  //按钮的类型,默认空,支持  primary，success，info，warning，danger
-                            name: 'delete', // 用户点击时返回的组件
-                            elColWidth: 3, //按钮的占位
-                        }
-                    ],
-                    showTableOperationButton: false,
-                    tableOperationButtonList: [
-                        {
-                            label: 'download', //按钮显示的名称
-                            type: '',  //按钮的类型,默认空,支持  primary，success，info，warning，danger
-                            name: 'download', // 按钮点击时间触发的函数名称
-                            width: 150
-                        }
-                     ],
-                    // tableCellDataLink: [{
-                    //     db_field_name: 'batch_id', //需要增加a标签的字段名
-                    //     field_label: [""], //a标签显示的限制值
-                    //     dialogDisplaysValueFromFields: '', // 对话框的说明来源于字段
-                    //     needCustomProcess: true,  //如果设置为ture,请监听onTableCellDataClick函数
-                    //     name:''
-                    // },
-                    // ]
-                },
+                generateOption: generateOption,
                 dsFacetKey:'',
-                showD1VueComponent: false
+                showD1VueComponent: false,
+                d1Options:JSON.stringify(generateOption, null, "\t")
             }
+        },
+        computed: {
+
         },
         methods:{
             handleToolbarButtonClick(name){
@@ -122,10 +131,14 @@
                 console.info(name);
             },
             handleQuery(){
-                this.showD1VueComponent = false;
-                this.$refs.d1VueComponet.setDataFacetKey(this.dsFacetKey);
-                this.$refs.d1VueComponet.loadFormTableSettibg();
-                this.$refs.d1VueComponet.runQuery();
+                this.showD1VueComponent = true;
+               let options = JSON.parse(this.d1Options);
+                options.dataFacetKey = this.dsFacetKey;
+                // this.$refs.d1VueComponet.setDataFacetKey(this.dsFacetKey);
+                this.$refs.d1VueComponet.initOptions(options);
+
+                 this.$refs.d1VueComponet.loadFormTableSettibg();
+                 this.$refs.d1VueComponet.runQuery();
             },
             completeLoadForm(){
                 this.showD1VueComponent = true;
