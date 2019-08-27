@@ -98,9 +98,17 @@
                    @closed ="closeDefaultMethod"
                    :center="true"
                    size="tiny">
+           <el-row style="padding-bottom: 10px">
+               <el-col :span="3" style="text-align: right">DF Key:&nbsp;&nbsp;</el-col>
+               <el-col :span="8"> <el-input  :disabled="true"  v-model="defaultsConfigurationDO.form_df_key"></el-input> </el-col>
+
+               <el-col :span="3" style="text-align: right">Field Key:&nbsp;&nbsp;</el-col>
+               <el-col :span="8"> <el-input  :disabled="true"  v-model="defaultsConfigurationDO.form_field_key"></el-input> </el-col>
+
+           </el-row>
+
 
             <el-form
-
                     label-position="left"
                     label-width="120px"
             >
@@ -108,58 +116,60 @@
                 <div style="padding-bottom: 10px"></div>
 
                 <el-form-item label="Type: "   >
-                    <el-select v-model="defaultsConfigurationDO.type" :disabled="defaultsConfigurationDO.field_type != 'AUTO' "  size="small">
-                        <el-option label="SQL" value="sql"></el-option>
-                        <el-option label="CUSTOMER" value="customer"> </el-option>
+                    <el-select v-model="defaultsConfigurationDO.plugin_type" :disabled="defaultsConfigurationDO.field_type != 'AUTO' "  size="small">
+                        <el-option label="SQL" value="SQL"></el-option>
                     </el-select>
 
                 </el-form-item>
 
                 <el-form-item  label="JDBC URL: " >
-                    <el-input  v-model="defaultsConfigurationDO.url" :disabled="defaultsConfigurationDO.field_type != 'AUTO'"  size="small"></el-input>
+                    <el-input  v-model="defaultsConfigurationDO.plugin_jdbc_url" placeholder="jdbc:mysql://localhost:3306/d1_core?useSSL=false" :disabled="defaultsConfigurationDO.field_type != 'AUTO'"  size="small"></el-input>
                 </el-form-item>
 
                 <el-form-item label="Username: " >
-                    <el-input v-model="defaultsConfigurationDO.username"  :disabled="defaultsConfigurationDO.field_type != 'AUTO'" size="small"></el-input>
+                    <el-input v-model="defaultsConfigurationDO.plugin_username"  :disabled="defaultsConfigurationDO.field_type != 'AUTO'" size="small"></el-input>
                 </el-form-item>
 
                 <el-form-item label="Password: " >
-                    <el-input  v-model="defaultsConfigurationDO.password" :disabled="defaultsConfigurationDO.field_type != 'AUTO'" size="small"></el-input>
+                    <el-input  v-model="defaultsConfigurationDO.plugin_password" :disabled="defaultsConfigurationDO.field_type != 'AUTO'" size="small"></el-input>
                 </el-form-item>
 
                 <el-form-item label="SQL: " >
-                    <el-input v-model="defaultsConfigurationDO.sql" type="textarea" :disabled="defaultsConfigurationDO.field_type != 'AUTO' || defaultsConfigurationDO.type != 'sql' "  size="small"></el-input>
-                </el-form-item>
-
-                <el-form-item label="Upload plugin: " >
-                    <el-input v-model="defaultsConfigurationDO.field_plugin_conf"  :disabled="defaultsConfigurationDO.field_type != 'AUTO' || defaultsConfigurationDO.type != 'customer' "  size="small"></el-input>
+                    <el-input v-model="defaultsConfigurationDO.plugin_sql" placeholder="select count(*) from queue_message" type="textarea" :disabled="defaultsConfigurationDO.field_type != 'AUTO' || defaultsConfigurationDO.plugin_type != 'SQL' "  size="small"></el-input>
                 </el-form-item>
 
                 <el-form-item label="cron: " >
-                    <el-input  v-model="defaultsConfigurationDO.cron" :disabled="defaultsConfigurationDO.field_type != 'AUTO'"  size="small"></el-input>
+                    <el-input  v-model="defaultsConfigurationDO.plugin_cron" placeholder="Seconds Minutes Hours DayofMonth Month DayofWeek Year " :disabled="defaultsConfigurationDO.field_type != 'AUTO'"  size="small"></el-input>
                 </el-form-item>
 
 
-                <div style="text-align: center"><el-button type="primary"  :disabled="defaultsConfigurationDO.field_type != 'AUTO'" >Test</el-button></div>
+                <el-form-item label="Enabled: " >
+                    <el-switch v-model="defaultsConfigurationDO.plugin_enabled" :disabled="defaultsConfigurationDO.field_type != 'AUTO'"  size="small" active-color="green"  inactive-color="gray"  active-value="true" ></el-switch>
+
+                </el-form-item>
+                <div style="text-align: center;color: red">
+                    <el-button type="primary"  @click="getTestResult" :disabled="defaultsConfigurationDO.field_type != 'AUTO'"  size="mini">Test Result</el-button>
+                </div>
                 <div style="padding-bottom: 10px"></div>
+
+
+
+              <div v-if="showTestResult" style="text-align: center;">
+                  {{testResult}}
+              </div>
 
 
                 <el-radio v-model="defaultsConfigurationDO.field_type" label="MANUAL">Manual</el-radio>
                 <div style="padding-bottom: 10px"></div>
 
                 <el-form-item label="Value: " >
-                    <el-input   v-model="defaultsConfigurationDO.field_manual_conf" :disabled="defaultsConfigurationDO.field_type != 'MANUAL'" size="small" placeholder = "JSON格式化字符串"></el-input>
+                    <el-input  v-model="defaultsConfigurationDO.manual_conf" :disabled="defaultsConfigurationDO.field_type != 'MANUAL'" size="small" placeholder = "JSON格式化字符串"></el-input>
                 </el-form-item>
 
 
 
 
             </el-form>
-
-
-
-
-
 
             <div slot="footer" class="dialog-footer">
                 <el-button type="primary"   @click="saveDefaultSelect">Save</el-button>
@@ -234,9 +244,6 @@
                                type="success" @click="openPreviewDialog"
                     >
                         Preview
-<!--                    <router-link  tag="span"  target="_blank"  :to="{path:'/common-view',query: {dfKey: node.label}}">-->
-<!--                      Preview-->
-<!--                    </router-link>-->
                     </el-button>
                 </el-col>
 
@@ -247,14 +254,6 @@
         </div>
         <br/>
         <div class="table">
-<!--            <vxe-toolbar>-->
-<!--                <template v-slot:buttons>-->
-<!--                    <vxe-button @click="$refs.xTable.revert()">还原全部</vxe-button>-->
-<!--                    <vxe-button @click="saveAll()">保存全部</vxe-button>-->
-
-<!--                </template>-->
-<!--            </vxe-toolbar>-->
-
 
             <vxe-grid border
                       ref="xTable"
@@ -267,7 +266,6 @@
                       :columns="tableColumns"
                       highlight-current-column
                       row-id="id"
-
                       :edit-config="{trigger: 'dblclick', mode: 'cell', showStatus: true}"
                       :mouse-config="{selected: true}"
                       :keyboard-config="{isArrow: true, isDel: true, isTab: true, isEdit: true}"
@@ -548,9 +546,7 @@
                         type: 'width',
                         width: 90,
                         title: 'Operation',
-
                         fixed: 'right',
-
                         slots: {
                             default: ({row}, h) => {
                                 return [
@@ -603,16 +599,22 @@
                 confirmToOpenDefaultDialogVisible:false,
 
                 defaultsConfigurationDO:{
+                    id:'',
+                    form_field_key:'',
+                    form_df_key:'',
                     field_type: "AUTO",
-                    type:"sql",
-                    url:"",
-                    username:"",
-                    password:"",
-                    sql:"",
-                    field_plugin_conf:"",
-                    cron:"",
-                    field_manual_conf:""
-                }
+                    plugin_cron:'',
+                    plugin_jdbc_url:'',
+                    plugin_username:'',
+                    plugin_password:'',
+                    plugin_sql:'',
+                    plugin_enabled:'false',
+                    manual_conf:"",
+                    plugin_type:'SQL',
+
+                },
+                showTestResult:false,
+                testResult:null
             }
         },
         computed:{
@@ -653,9 +655,7 @@
                 this.tableData =[];
                 this.refreshFormTableSettings();
             },
-            handleEdit() {
 
-            },
             refreshFormTableSettings(){
                 let url = this.baseUrl + 'd1-core/d1/datasource/refresh-df-form-table-setting?dfKey=' + this.node.label;
                 this.tabScreenLoading = true;
@@ -677,9 +677,7 @@
                 })
 
             },
-            saveAll() {
-                // TODO
-            },
+            // 废弃，因为 编辑表格不能 去掉标记
             saveOne(row) {
                 let saveDataArr = [];
                 saveDataArr.push(row);
@@ -720,9 +718,11 @@
                 let row = obj.row;
                 this.clickRow = row;
                 let property = column.property;
+
+                let dfKey = row.df_key;
+                let fieldName = row.db_field_name;
                 if(property && property == 'optional_dic_val'){
-                    let dfKey = row.df_key;
-                    let fieldName = row.db_field_name;
+
                     let url = this.baseUrl + "d1-core/d1/form-dict-configuration?field_form_df_key=" + dfKey + "&field_form_field_key=" + fieldName;
                     this.tabScreenLoading = true;
                     this.http.get(url).then(response =>{
@@ -745,8 +745,42 @@
                     })
                 }else if( property && property == 'form_field_def_val_strategy'){
                     this.confirmToOpenDefaultDialogVisible = true;
+                    this.loadDefaultStrategyVal(dfKey,fieldName);
 
                 }
+            },
+            loadDefaultStrategyVal(dfKey,fieldName){
+              this.tabScreenLoading = true;
+              let url = this.baseUrl +"d1-core/d1/defaults-configuration";
+              url += "?field_form_df_key=" + dfKey + "&field_form_field_key=" + fieldName;
+              this.defaultsConfigurationDO.form_field_key = fieldName;
+              this.defaultsConfigurationDO.form_df_key = dfKey;
+              this.http.get(url).then(resp => {
+                  this.tabScreenLoading =false;
+                  let data = resp.data;
+                  if(data){
+
+                      if(data.field_type){
+                          this.defaultsConfigurationDO.field_type = data.field_type;
+                      }
+                      if(data.plugin_type){
+                          this.defaultsConfigurationDO.plugin_type = data.plugin_type;
+                      }
+
+                      this.defaultsConfigurationDO.plugin_cron = data.plugin_cron;
+                      this.defaultsConfigurationDO.id = data.id;
+                      this.defaultsConfigurationDO.plugin_jdbc_url = data.plugin_jdbc_url;
+                      this.defaultsConfigurationDO.plugin_username = data.plugin_username;
+                      this.defaultsConfigurationDO.plugin_password = data.plugin_password;
+
+                      this.defaultsConfigurationDO.plugin_sql = data.plugin_sql;
+                      this.defaultsConfigurationDO.plugin_enable = data.plugin_enable;
+                      this.defaultsConfigurationDO.manual_conf = data.manual_conf;
+                  }
+              }).catch(error => {
+                  this.tabScreenLoading =false;
+              })
+
             },
             dicFormatter(obj){
                 return obj.row.form_field_dict_domain_name;
@@ -828,7 +862,6 @@
                     this.tabScreenLoading = false;
                 })
 
-
             },
             openPreviewPage(){
                 this.confirmOpenPreviewDialogVisible = false;
@@ -842,13 +875,50 @@
             openPreviewDialog(){
                 this.confirmOpenPreviewDialogVisible = true;
             },
-            // TODO
             saveDefaultSelect(){
+                let url = this.baseUrl + 'd1-core/d1/defaults-configuration';
+                this.tabScreenLoading = true;
+                this.http.post(url, this.defaultsConfigurationDO).then(resp =>{
+                    this.clickRow.form_field_def_val_strategy = this.defaultsConfigurationDO.field_type;
+                    this.tabScreenLoading =false;
+                    this.confirmToOpenDefaultDialogVisible =false;
+                }).catch(error =>{
+                    this.tabScreenLoading = false;
+                })
 
             },
-            // TODO
             closeDefaultMethod(){
+                this.defaultsConfigurationDO = {
+                    id:'',
+                        form_field_key:'',
+                        form_df_key:'',
+                        field_type: "AUTO",
+                        plugin_cron:'',
+                        plugin_jdbc_url:'',
+                        plugin_username:'',
+                        plugin_password:'',
+                        plugin_sql:'',
+                        plugin_enabled:'false',
+                        manual_conf:"",
+                        plugin_type:'SQL'
+                };
+                this.showTestResult = false;
+                this.testResult = null;
+            },
+            getTestResult(){
+                let url = this.baseUrl +"d1-core/d1/defaults-configuration/test-sql";
+                this.tabScreenLoading = true;
+                this.http.post(url,this.defaultsConfigurationDO).then(resp =>{
+                    this.showTestResult = true;
+                    this.tabScreenLoading = false;
+                    let data = resp.data;
 
+                    this.testResult = data;
+
+
+                }).catch(error =>{
+                    this.tabScreenLoading = false;
+                })
             }
 
         }
