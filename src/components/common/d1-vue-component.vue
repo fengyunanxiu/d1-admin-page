@@ -270,7 +270,6 @@
          element-loading-spinner="el-icon-loading"
          element-loading-background="rgba(0, 0, 0, 0.8)">
       <el-table
-
         ref="basicFormTable"
         :data="tableData"
         border

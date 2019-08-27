@@ -547,8 +547,8 @@
                       <el-submenu index="1">
                         <template slot="title"><i class="el-icon-setting fa-2x tool-icon-right-menu container-background-color cursor" aria-hidden="true"></i></template>
                         <el-menu-item index="2-2"><el-checkbox v-model="showDataFacetOnly">Show Data Facet Only</el-checkbox></el-menu-item>
-                        <el-menu-item index="2-1"><i class="fa fa-book fa-lg" aria-hidden="true"></i> <span style="margin-left: 3px">Dictionary Management</span></el-menu-item>
-
+<!--                        <el-menu-item index="2-1"><i class="fa fa-book fa-lg" aria-hidden="true"></i> <span style="margin-left: 3px">Dictionary Management</span></el-menu-item>-->
+                        <el-menu-item index="2-1"><el-checkbox v-model="showDictionryManagement">Dictionary Management</el-checkbox></el-menu-item>
                         <el-menu-item index="2-3"><i class="fa fa-copyright" aria-hidden="true"></i> <span style="margin-left: 3px" @click="openCopyRightDialog">About D1</span></el-menu-item>
                       </el-submenu>
 
@@ -578,15 +578,21 @@
                                  @editDataSource="editDataSource"
                                   @refreshTreeComplete="refreshTreeComplete"></data-source-structure>
           <div v-else>
-            <span style="    writing-mode: vertical-lr;margin-top: 10px;font-size: 15px;">Data Facets</span>
+            <span style="  writing-mode: vertical-lr;margin-top: 10px;font-size: 15px;">Data Facets</span>
 
           </div>
         </div>
 
       </el-col>
       <el-col :span="showDataSource ? 19 : 23">
-        <div class="area right-data-source" :style="{height: screenHeight +'px'}">
+        <div class="area right-data-source" :style="{height: screenHeight +'px'}" >
+
           <!-- tab条 -->
+
+          <template v-if="showDictionryManagement">
+            <dict-mgmt></dict-mgmt>
+          </template>
+          <template v-else>
           <template v-if="editableTabs.length == 0">
             <div style="width: 100%;height: 100%;background-color: gray;text-align: center;display:table;">
                <div style=" display:table-cell;vertical-align:middle;font-size: 30px">Data Facet Configuration Area</div>
@@ -607,6 +613,10 @@
 
             </el-tab-pane>
           </el-tabs>
+
+          </template>
+
+
         </div>
       </el-col>
     </el-row>
@@ -620,10 +630,13 @@
   import dataSourceSetting from '@/components/data-source-setting.vue'
   import util from '@/util/util.js'
 
+  import dictMgmt from '@/view/dict-mgmt.vue'
+  import DictMgmt from "../view/dict-mgmt";
 
   export default {
     name: "container",
     components: {
+      DictMgmt,
       dataSourceStructure,
       dataSourceSetting
     },
@@ -742,6 +755,7 @@
           }]
         }],
         fullScreenLoading:false,
+        showDictionryManagement:false
 
       }
     },
@@ -757,6 +771,8 @@
               // }
               this.$refs.structure.filter(this.filterText, showDataFacetOnly);
           },
+
+
         screenHeight (val) {
           // 为了避免频繁触发resize函数导致页面卡顿，使用定时器
           if (!this.timer) {

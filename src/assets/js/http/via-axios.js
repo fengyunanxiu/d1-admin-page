@@ -113,6 +113,23 @@ export default {
       })
     })
   },
+
+  //post请求
+  put (url, data, params) {
+    return new Promise((resolve, reject) => {
+      axios({
+        method: 'put',
+        url: url,
+        withCredentials:false,
+        params: params,
+        data: data
+      }).then(resp => {
+        resolve(resp)
+      }).catch(error => {
+        reject(error)
+      })
+    })
+  },
   //delete请求
   delete (url, data, params) {
     return new Promise((resolve, reject) => {
