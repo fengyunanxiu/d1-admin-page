@@ -369,11 +369,11 @@
                                             value: 'FUZZY_MATCHING_TEXT'
                                         },
                                         {
+                                            label: 'SINGLE_CHOICE_LIST_R1',
+                                            value: 'SINGLE_CHOICE_LIST_R1'
+                                        },  {
                                             label: 'SINGLE_CHOICE_LIST',
                                             value: 'SINGLE_CHOICE_LIST'
-                                        },  {
-                                            label: 'SINGLE_CHOICE_LIST_W_EMPTY',
-                                            value: 'SINGLE_CHOICE_LIST_W_EMPTY'
                                         },{
                                             label: 'MULTIPLE_CHOICE_LIST',
                                             value: 'MULTIPLE_CHOICE_LIST'
@@ -695,9 +695,9 @@
                     let rowData = saveDataArr[i];
 
                     let queryType = rowData.form_field_query_type
-                    if(QueryFormType.SINGLE_CHOICE_LIST === queryType || QueryFormType.SINGLE_CHOICE_LIST_W_EMPTY === queryType || QueryFormType.MULTIPLE_CHOICE_LIST === queryType){
+                    if(QueryFormType.SINGLE_CHOICE_LIST_R1 === queryType || QueryFormType.SINGLE_CHOICE_LIST === queryType || QueryFormType.MULTIPLE_CHOICE_LIST === queryType){
                         if(!rowData.form_field_dict_domain_name ){
-                            this.$message.warning('Element Type like:SINGLE_CHOICE_LIST,SINGLE_CHOICE_LIST_W_EMPTY,MULTIPLE_CHOICE_LIST ,Optional Values can not be empty');
+                            this.$message.warning('Element Type like:SINGLE_CHOICE_LIST_R1,SINGLE_CHOICE_LIST,MULTIPLE_CHOICE_LIST ,Optional Values can not be empty');
                             return;
                         }
                     }

@@ -77,7 +77,7 @@
                       v-for="(item, index) in pageSettingData.form" :key="index">
                 <template>
 
-                  <el-form-item v-if="item.form_field_query_type === formType.SINGLE_CHOICE_LIST"
+                  <el-form-item v-if="item.form_field_query_type === formType.SINGLE_CHOICE_LIST_R1"
                                 :label="item.view_field_label">
                     <el-select v-model="item.field_value" size="small">
                       <template v-for="(option, optIdx) in item.field_optional_value_list">
@@ -87,7 +87,7 @@
                   </el-form-item><!--下拉列表单选-->
 
 
-                  <el-form-item v-if="item.form_field_query_type === formType.SINGLE_CHOICE_LIST_W_EMPTY"
+                  <el-form-item v-if="item.form_field_query_type === formType.SINGLE_CHOICE_LIST"
                                 :label="item.view_field_label">
                     <el-select v-model="item.field_value" size="small" :clearable="true">
                       <template v-for="(option, optIdx) in item.field_optional_value_list">

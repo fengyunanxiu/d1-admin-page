@@ -731,7 +731,6 @@
                             dictDO.field_label = dictList[j].field_label;
                             dictDO.field_value = dictList[j].field_value;
                             dictDO.field_sequence = dictList[j].field_sequence;
-                            dictDO.field_enable = dictList[j].field_enable;
                             dictDO.field_id = dictList[j].field_id;
                             dictDO.field_parent_id = dictList[j].field_parent_id;
                             data.push(dictDO);
