@@ -130,7 +130,7 @@
 
                     <el-form-item v-if="item.form_field_query_type === formType.MULTIPLE_CHOICE_LIST ||  item.form_field_query_type === formType.NULL_VALUE  || item.form_field_query_type === formType.EMPTY_VALUE"
                                   :label="item.view_field_label">
-                      <el-select v-model="item.field_value" size="small"  multiple  :clearable="true"  ><!--多选加个multiple-->
+                      <el-select v-model="item.field_value" size="small"  multiple  :clearable="true"   @change="selectorChange(item.db_field_name, item.field_value)" ><!--多选加个multiple-->
                         <template v-for="(option, optIdx) in item.field_optional_value_list">
                           <el-option :label="option.option_label" :value="option.option_value"></el-option>
                         </template>
@@ -1166,7 +1166,7 @@
       inArray(arr, str) {
         let i = arr.length;
         while (i--) {
-          if (arr[i].id === str) {
+          if (arr[i] === str) {
             return true;
           }
         }
@@ -1229,7 +1229,7 @@
                 // this.runQuery();
                 this.dataLoading = false;
             }).catch(error => {
-                console.error(error);
+                console.info(error);
                 this.dataLoading = false;
             });
         },
@@ -1268,7 +1268,7 @@
         },
         selectorChange(dbFieldName, chooseValueList) {
           //只考虑级联的下一级
-            let childFieldName = this.basicCascadeInform[dbFieldName];
+            let childFieldName = this.fieldNameCascade[dbFieldName];
             let form = this.pageSettingData.form;
             //只有存在级联关系时才需要往下继续
             if (this.basicCascadeInform[dbFieldName]) {
@@ -1277,11 +1277,11 @@
                     //仅控制这一级
                   if(childFieldName === formItem.db_field_name){
                       //为这一级赋值
-                      formItem = this.this.fullChildFieldSelector(dbFieldName, chooseValueList, formItem.field_optional_value_list, formItem);
+                      formItem = this.fullChildFieldSelector(dbFieldName, chooseValueList, formItem.field_value, formItem);
 
                       //还存在下级，继续往下迭代
                       if(formItem.field_cascade_child_field_name){
-                          this.selectorChange(formItem.db_field_name, fieldOptionalValueList);
+                          this.selectorChange(formItem.db_field_name, formItem.field_value);
                       }
 
                   }
@@ -1296,7 +1296,11 @@
             for (let i = 0; i < cascadeOptionsList.length; i++) {
                let parentOptional = cascadeOptionsList[i];
                 if(this.inArray(parentChooseValueList, parentOptional.option_value)){
-                    formItem.field_optional_value_list.push(parentOptional.children);
+                    if(parentOptional.children){
+                        for (let j = 0; j < parentOptional.children.length; j++) {
+                            formItem.field_optional_value_list.push(parentOptional.children[j]);
+                        }
+                    }
                 }
             }
             //2。遍历可选项,取出可选项value list
@@ -1306,8 +1310,7 @@
                 optionalValueList.push(optionalValue);
             }
             //3. 两个数组取交集
-            let intersection = optionalValueList.filter(v => b.includes(childChooseValueList));
-            formItem.field_value = intersection;
+            formItem.field_value = optionalValueList.filter(v => childChooseValueList.includes(v));
             return formItem;
         }
     }
