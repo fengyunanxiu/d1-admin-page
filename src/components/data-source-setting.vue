@@ -594,7 +594,7 @@
                 dictTotalRecord: 0,
                 dictPageSize: 10,
                 dictCurrentPage: 1,
-                queryDictUrl:"d1-core/d1/dict/manage",
+                queryDictUrl:"d1-core/d1/dict/manage/domain",
                 confirmOpenPreviewDialogVisible:false,
                 confirmToOpenDefaultDialogVisible:false,
 

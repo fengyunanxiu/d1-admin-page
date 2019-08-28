@@ -112,7 +112,7 @@
                 </el-form-item>
             </el-row>
 
-                <div style="padding: 10px"> Value Lable List </div>
+                <div style="padding: 10px"> Value&Label List </div>
 
                 <template v-for = "(item, index) in valueLabelList">
                     <el-row>
@@ -188,12 +188,15 @@
 
         <div style="width: 100%;padding-top: 5px;padding-bottom: 5px">
             <el-row>
-                <el-col :span="20">
+                <el-col :span="17">
                     &nbsp;
                 </el-col>
-                <el-col :span="3" style="text-align: right">
+                <el-col :span="6" style="text-align: right">
                     <el-button size="mini" type="success" @click="addDictItem()">Add</el-button>
+
+                    <el-button size="mini" type="success" @click="saveDictItem()">Save</el-button>
                 </el-col>
+
 
             </el-row>
 
@@ -211,17 +214,15 @@
                 border
                 resizable
                 ref="xTable"
-
-
                 :tree-config="{children: 'dict_list'}"
                 :data.sync="dictTableData"
-                :edit-config="{trigger: 'dbclick', mode: 'cell', activeMethod: activeRowMethod,showStatus:true}"
+                :edit-config="{trigger: 'dblclick', mode: 'cell', activeMethod: activeCellMethod,showStatus:true}"
         >
 
 
-
-            <vxe-table-column field="field_domain" title="Domain"></vxe-table-column>
-            <vxe-table-column field="field_item" title="Item" tree-node></vxe-table-column>
+            <vxe-table-column type="index" title="No." tree-node></vxe-table-column>
+            <vxe-table-column field="field_domain" title="Domain" :edit-render="{name: 'input'}"   ></vxe-table-column>
+            <vxe-table-column field="field_item" title="Item"  :edit-render="{name: 'input'}" ></vxe-table-column>
 
 
 
@@ -231,14 +232,6 @@
 
 
             <vxe-table-column field="field_label" title="Label" :edit-render="{name: 'input'}" ></vxe-table-column>
-
-            <vxe-table-column field="field_enable"  title="Enable" >
-                <template slot-scope="scope" v-if="!scope.row.field_domain">
-                    <el-switch v-model="scope.row.field_enable"  active-color="green"  inactive-color="gray"  active-value="true"
-                               inactive-value="false"
-                                >  </el-switch>
-                </template>
-            </vxe-table-column>
 
             <vxe-table-column field="field_sequence" title="Sequence"  :edit-render="{name: 'ElInputNumber'}"></vxe-table-column>
 
@@ -255,7 +248,7 @@
 
                     <div v-else>
 <!--                        <el-button  @click="handleValSave(scope)" size="mini" >Save</el-button>-->
-                        <el-button  v-if="scope.row.field_id" @click="handleValDelete(scope)" size="mini" >Delete</el-button>
+                        <el-button  v-if="scope.row.field_id && scope.data && scope.data[scope.$seq - 1].dict_list.length > 1" @click="handleValDelete(scope)" size="mini" >Delete</el-button>
 
                     </div>
 
@@ -375,7 +368,6 @@
         },
         methods:{
             handleDictQuery(){
-
                 this.http.get(this.fullQueryDictUrl).then(resp =>{
                     let data = resp.data;
                     this.dictTableData = data.content;
@@ -396,7 +388,6 @@
                 this.handleDictQuery();
             },
             handleItemEdit(scope){
-
                 let row = scope.row;
                 this.confirmToOpenDictStrategyDialogVisible = true;
                 this.fullScreenLoading  = true;
@@ -430,6 +421,7 @@
 
             },
             handleItemDelete(scope){
+
                 let row = scope.row;
                 let fieldDomain = row.field_domain;
                 let fieldItem = row.field_item;
@@ -449,6 +441,7 @@
 
 
             },
+            // Expired
             handleValSave(scope){
                 console.log(scope);
                 let index = scope.$seq -1;
@@ -475,7 +468,8 @@
                 dictDO.field_sequence = fieldSequence;
                 dictDO.field_parent_id = fieldParentId;
 
-                dictDO.field_enable = false;
+                // TODO 默认给true
+                dictDO.field_enable = true;
                 if(fieldEnabled != null){
                     dictDO.field_enable = fieldEnabled;
                 }
@@ -509,7 +503,6 @@
                 let fieldId = row.field_id;
                 let idArr = [];
                 idArr.push(fieldId);
-
                 let index = scope.$seq -1;
 
 
@@ -668,11 +661,18 @@
             },
 
 
-            activeRowMethod ({ row, rowIndex }) {
-                if(row.field_domain){
-                    return false;
+            activeCellMethod (scope) {
+
+                let row = scope.row;
+                let columnIndex = scope.$columnIndex;
+
+                if(row.field_domain && (columnIndex == 1 || columnIndex == 2)){
+                    return true;
                 }
-                return true;
+                if(!row.field_domain && (columnIndex == 3 || columnIndex == 4 || columnIndex == 5 || columnIndex == 7)){
+                    return true;
+                }
+                return false;
             },
             addValueLabelList(index){
                 let valueLabelDO = {
@@ -711,6 +711,43 @@
                 }).catch(error =>{
                     this.fullScreenLoading = false;
                 })
+            },
+            saveDictItem(){
+                let data = [];
+                let tableData = this.dictTableData;
+                for(let i = 0 ; i< tableData.length; i++){
+
+                    let domain = null;
+                    let item = null;
+                    domain = tableData[i].field_domain;
+                    item = tableData[i].field_item;
+
+                    let dictList = tableData[i].dict_list;
+                    if(dictList){
+                        for(let j =0 ;j < dictList.length; j++){
+                            let dictDO = {};
+                            dictDO.field_domain = domain;
+                            dictDO.field_item = item;
+                            dictDO.field_label = dictList[j].field_label;
+                            dictDO.field_value = dictList[j].field_value;
+                            dictDO.field_sequence = dictList[j].field_sequence;
+                            dictDO.field_enable = dictList[j].field_enable;
+                            dictDO.field_id = dictList[j].field_id;
+                            dictDO.field_parent_id = dictList[j].field_parent_id;
+                            data.push(dictDO);
+                        }
+                    }
+                }
+               let url = this.baseUrl +"d1-core/d1/dict/manage/domain-update";
+                this.fullTabLoading = true;
+                this.http.post(url,data).then(resp =>{
+                    this.$message.success('Operation Success');
+                    this.fullTabLoading = false;
+                    this.$refs.xTable.refreshData();
+                }).catch(error =>{
+                    this.fullTabLoading = false;
+                })
+
             }
         }
 
