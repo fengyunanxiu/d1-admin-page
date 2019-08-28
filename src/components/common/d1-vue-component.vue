@@ -109,21 +109,21 @@
                 <el-col :xs="12" :sm="8" :md="6" :lg="4" v-else>
                   <template>
 
-                    <el-form-item v-if="item.form_field_query_type === formType.SINGLE_CHOICE_LIST"
+                    <el-form-item v-if="item.form_field_query_type === formType.SINGLE_CHOICE_LIST_R1"
                                   :label="item.view_field_label">
                       <el-select v-model="item.field_value" size="small">
                         <template v-for="(option, optIdx) in item.field_optional_value_list">
-                          <el-option :label="option.option_value" :value="option.option_id"></el-option>
+                          <el-option :label="option.option_label" :value="option.option_value"></el-option>
                         </template>
                       </el-select>
                     </el-form-item><!--下拉列表单选-->
 
 
-                    <el-form-item v-if="item.form_field_query_type === formType.SINGLE_CHOICE_LIST_W_EMPTY"
+                    <el-form-item v-if="item.form_field_query_type === formType.SINGLE_CHOICE_LIST"
                                   :label="item.view_field_label">
                       <el-select v-model="item.field_value" size="small" :clearable="true">
                         <template v-for="(option, optIdx) in item.field_optional_value_list">
-                          <el-option :label="option.option_value" :value="option.option_id"></el-option>
+                          <el-option :label="option.option_label" :value="option.option_value"></el-option>
                         </template>
                       </el-select>
                     </el-form-item>
@@ -132,7 +132,7 @@
                                   :label="item.view_field_label">
                       <el-select v-model="item.field_value" size="small"  multiple  :clearable="true"  ><!--多选加个multiple-->
                         <template v-for="(option, optIdx) in item.field_optional_value_list">
-                          <el-option :label="option.option_value" :value="option.option_id"></el-option>
+                          <el-option :label="option.option_label" :value="option.option_value"></el-option>
                         </template>
                       </el-select>
                     </el-form-item><!--下拉列表多选-->
@@ -374,7 +374,7 @@
             SINGLE_DATE: 'SINGLE_DATE',
             DATE_TIME_RANGE :"DATE_TIME_RANGE",
             /** 下拉列表单选 */
-            SINGLE_CHOICE_LIST: 'SINGLE_CHOICE_LIST',
+            SINGLE_CHOICE_LIST_R1: 'SINGLE_CHOICE_LIST_R1',
             /** 下拉列表多选 */
             MULTIPLE_CHOICE_LIST: 'MULTIPLE_CHOICE_LIST',
             /** RADIOBOX单选 */
@@ -391,7 +391,7 @@
             EMPTY_VALUE:'EMPTY_VALUE',
             SEGMENTATION_TEXT:'SEGMENTATION_TEXT',
             AUTO_COMPLETE: 'AUTO_COMPLETE',
-            SINGLE_CHOICE_LIST_W_EMPTY:'SINGLE_CHOICE_LIST_W_EMPTY',
+            SINGLE_CHOICE_LIST:'SINGLE_CHOICE_LIST',
             SINGLE_DATETIME:'SINGLE_DATETIME',
             EXACT_MATCHING_TEXT:'EXACT_MATCHING_TEXT',
             FUZZY_MATCHING_TEXT:'FUZZY_MATCHING_TEXT'
