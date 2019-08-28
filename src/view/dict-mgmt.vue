@@ -353,7 +353,8 @@
                 activeNames: [],
                 removeDialogText:'',
                 removeType:'',
-                deleteScope:null
+                deleteScope:null,
+                confirmToRemoveDialogVisible:false
             }
         },
         computed: {

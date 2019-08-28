@@ -1138,7 +1138,8 @@
                 window.clearInterval(intervalId);
 
                 // TODO ,先写死，这导出完全是一整套流程；这里url先写死； 要不要写个baseUrl
-                window.location.href =   "http://192.168.199.231:10002/" + "d1-core/d1/export/download?taskId=" +exportId;
+
+                window.location.href =    that.baseUrl + "d1-core/d1/export/download?taskId=" +exportId;
               }
             }).catch(error => {
               that.$message.warning('Export failed.');
