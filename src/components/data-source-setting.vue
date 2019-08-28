@@ -873,7 +873,13 @@
                 window.open(href, '_blank')
             },
             openPreviewDialog(){
-                this.confirmOpenPreviewDialogVisible = true;
+                let updateRecords = this.$refs.xTable.getUpdateRecords();
+                if(updateRecords == 0){
+                    this.openPreviewPage();
+                }else{
+                    this.confirmOpenPreviewDialogVisible = true;
+                }
+
             },
             saveDefaultSelect(){
                 let url = this.baseUrl + 'd1-core/d1/defaults-configuration';

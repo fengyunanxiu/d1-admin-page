@@ -70,6 +70,8 @@
 
       <el-tabs class="el-tabs" type="border-card" @tab-click="handleTabClick" v-model="activeTabName">
         <el-tab-pane label="General" name="general">
+
+
           <el-form
             :model="editBasicInfo"
             ref="editBasicInfo"
@@ -93,16 +95,6 @@
                   <el-input v-model="dbConfig.db_basic_config_dto.db_port"></el-input>
                 </el-form-item>
               </el-col>
-<!--              <el-col :span="3">
-                <div class="text-right text-dialog">Database:</div>
-              </el-col>
-              <el-col :span="21">
-                <el-form-item label=" ">
-                  <el-input></el-input>
-                </el-form-item>
-              </el-col>-->
-
-
 
               <el-col :span="4">
                 <div class="text-right text-dialog"><span class="red">*</span> User:</div>
@@ -547,8 +539,9 @@
                       <el-submenu index="1">
                         <template slot="title"><i class="el-icon-setting fa-2x tool-icon-right-menu container-background-color cursor" aria-hidden="true"></i></template>
                         <el-menu-item index="2-2"><el-checkbox v-model="showDataFacetOnly">Show Data Facet Only</el-checkbox></el-menu-item>
-<!--                        <el-menu-item index="2-1"><i class="fa fa-book fa-lg" aria-hidden="true"></i> <span style="margin-left: 3px">Dictionary Management</span></el-menu-item>-->
-                        <el-menu-item index="2-1"><el-checkbox v-model="showDictionryManagement">Dictionary Management</el-checkbox></el-menu-item>
+
+<!--                        <el-menu-item index="2-1"><el-checkbox v-model="showDictionryManagement">Dictionary Management</el-checkbox></el-menu-item> -->
+                        <el-menu-item index="2-1"><i class="fa fa-book fa-lg" aria-hidden="true"></i> <span style="margin-left: 3px" @click="openDictManagement">Dictionary Management</span></el-menu-item>
                         <el-menu-item index="2-3"><i class="fa fa-copyright" aria-hidden="true"></i> <span style="margin-left: 3px" @click="openCopyRightDialog">About D1</span></el-menu-item>
                       </el-submenu>
 
@@ -587,13 +580,7 @@
       <el-col :span="showDataSource ? 19 : 23">
         <div class="area right-data-source" :style="{height: screenHeight +'px'}" >
 
-          <!-- tab条 -->
-
-          <template v-if="showDictionryManagement">
-            <dict-mgmt></dict-mgmt>
-          </template>
-          <template v-else>
-          <template v-if="editableTabs.length == 0">
+          <template v-if="editableTabs.length == 0 && dictTableTabs.length == 0 ">
             <div style="width: 100%;height: 100%;background-color: gray;text-align: center;display:table;">
                <div style=" display:table-cell;vertical-align:middle;font-size: 30px">Data Facet Configuration Area</div>
 
@@ -602,6 +589,14 @@
 
 
           <el-tabs v-model="editableTabsValue" type="card" closable @edit="handleTabsEdit" >
+
+            <el-tab-pane :key="item.id"
+                         v-for="(item, index) in dictTableTabs"
+                         :label="item.label"
+                         :name="item.id + '' ">
+              <dict-mgmt> </dict-mgmt>
+            </el-tab-pane>
+
             <el-tab-pane
               :key="item.id"
               v-for="(item, index) in editableTabs"
@@ -614,7 +609,7 @@
             </el-tab-pane>
           </el-tabs>
 
-          </template>
+<!--          </template>-->
 
 
         </div>
@@ -629,14 +624,12 @@
   import dataSourceStructure from '@/components/data-source-structure'
   import dataSourceSetting from '@/components/data-source-setting.vue'
   import util from '@/util/util.js'
-
   import dictMgmt from '@/view/dict-mgmt.vue'
-  import DictMgmt from "../view/dict-mgmt";
 
   export default {
     name: "container",
     components: {
-      DictMgmt,
+      dictMgmt,
       dataSourceStructure,
       dataSourceSetting
     },
@@ -755,8 +748,9 @@
           }]
         }],
         fullScreenLoading:false,
-        showDictionryManagement:false
-
+        dictTableTabs:[],
+        openDictManagementTab:false,
+        dictMgmtTabId:'dict-mgmt'
       }
     },
       watch: {
@@ -789,6 +783,16 @@
         }
       },
     methods: {
+      openDictManagement(){
+        if(!this.openDictManagementTab){
+          let dictTable = {};
+          dictTable.label = "Dict Mgmt";
+          dictTable.id =  this.dictMgmtTabId;
+          this.dictTableTabs.push(dictTable);
+          this.openDictManagementTab = true;
+        }
+        this.editableTabsValue =  this.dictMgmtTabId;
+      },
       handleTabsEdit( targetName,action ,node) {
         if (action === 'add' || action === 'edit') {
           let oldFlag = false;
@@ -808,33 +812,54 @@
 
         }
         if (action === 'remove') {
-          let tabs = this.editableTabs;
           let activeName = this.editableTabsValue;
-          if(!targetName){
-            targetName = node.id +"";
-          }
+          if(targetName == this.dictMgmtTabId){
+            this.dictTableTabs = [];
+            this.openDictManagementTab = false;
 
-          if (activeName === targetName) {
-            tabs.forEach((tab, index) => {
-              if (tab.id+"" === targetName) {
-                let nextTab = tabs[index + 1] || tabs[index - 1];
-                if (nextTab) {
-                  activeName = nextTab.id +"";
+            //如果当前选中的也是dict mgmt
+            if(activeName == this.dictMgmtTabId){
+              if(this.editableTabs){
+                this.editableTabsValue = this.editableTabs[0].id +'';
+              }
+            }
+
+          }else{
+              let tabs = this.editableTabs;
+              if(!targetName){
+                targetName = node.id +"";
+              }
+              if (activeName === targetName) {
+                tabs.forEach((tab, index) => {
+                  if (tab.id+"" === targetName) {
+                    let nextTab = tabs[index + 1] || tabs[index - 1];
+                    if (nextTab) {
+                      activeName = nextTab.id +"";
+                    }
+                    // 如果不存在，需要考虑跳回dictMgmtTabId
+                    else{
+                      if(this.dictTableTabs){
+                        activeName = this.dictMgmtTabId;
+                      }
+                    }
+                  }
+                });
+              }
+
+
+              this.editableTabsValue = activeName;
+              let removededitableTabs = [];
+              for(var i in this.editableTabs){
+                if(this.editableTabs[i].id+"" === targetName){
+                }else{
+                  removededitableTabs.push(this.editableTabs[i]);
                 }
               }
-            });
-          }
-
-          this.editableTabsValue = activeName;
-          let removededitableTabs = [];
-          for(var i in this.editableTabs){
-            if(this.editableTabs[i].id+"" === targetName){
-            }else{
-             removededitableTabs.push(this.editableTabs[i]);
+              this.editableTabs = removededitableTabs;
             }
           }
-          this.editableTabs = removededitableTabs;
-        }
+
+
       },
       addDataSource() {
         this.addDataSourceDialogVisible = true;

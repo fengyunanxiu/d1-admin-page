@@ -13,6 +13,18 @@
 
         </div>
 
+        <el-dialog
+                title="Confirm"
+                :visible.sync="confirmToRemoveDialogVisible"
+                :close-on-click-modal="false"
+                :center="true"
+                size="tiny">
+            <div class="dialog">{{removeDialogText}}</div>
+            <span slot="footer" class="dialog-footer">
+              <el-button type="primary" @click="confirmToRemoveDialogVisible = false">No</el-button>
+              <el-button type="danger" @click="confirmToRemove()">Yes</el-button>
+            </span>
+        </el-dialog>
 
         <el-dialog :title = "dictStrategyTitle" :visible.sync="confirmToOpenDictStrategyDialogVisible"
                    :close-on-click-modal="false"
@@ -22,7 +34,6 @@
         >
 
             <el-form
-
                     label-position="right"
                     label-width="120px"
             >
@@ -148,8 +159,14 @@
 
         </el-dialog>
 
-        <el-collapse ><!--form表单折叠板-->
+        <el-collapse  v-model="activeNames" ><!--form表单折叠板-->
             <el-collapse-item name="1">
+                <template slot="title">
+              <span style="text-align: right;width: 100%"> <template v-if="activeNames.includes('1')"> Collapse Filter </template>
+                 <template v-else> Expand Filter </template>
+                &nbsp; </span>
+                </template>
+
                 <el-form>
                     <el-row :gutter="10">
                         <el-col :xs="12" :sm="8" :md="6" :lg="4">
@@ -238,17 +255,17 @@
 
             <vxe-table-column field="field_id" title="ID"  ></vxe-table-column>
             <vxe-table-column field="field_parent_id" title="Parent Id"  :edit-render="{name: 'input'}" ></vxe-table-column>
-            <vxe-table-column title = "Operation(Val)" fixed="right" min-width="150px" >
+            <vxe-table-column title = "Operation" fixed="right" min-width="150px" >
                 <template slot-scope="scope">
                     <div  v-if="scope.row.field_domain" style="color: red">
-<!--                        <el-button  @click="handleItemAdd(scope)" size="mini" >Add</el-button>-->
-                        <el-button  @click="handleItemEdit(scope)" size="mini" >Strategy</el-button>
-                        <el-button  @click="handleItemDelete(scope)" size="mini" >Delete</el-button>
+
+                        <el-button  @click="handleStrategyEdit(scope)" size="mini" >Strategy</el-button>
+                        <el-button  @click="handleDeleteDialog(scope,'domain')" size="mini" >Delete</el-button>
                     </div>
 
                     <div v-else>
-<!--                        <el-button  @click="handleValSave(scope)" size="mini" >Save</el-button>-->
-                        <el-button  v-if="scope.row.field_id && scope.data && scope.data[scope.$seq - 1].dict_list.length > 1" @click="handleValDelete(scope)" size="mini" >Delete</el-button>
+
+                        <el-button  v-if="scope.row.field_id && scope.data && scope.data[scope.$seq - 1].dict_list.length > 1" @click="handleDeleteDialog(scope,'value')" size="mini" >Delete</el-button>
 
                     </div>
 
@@ -332,7 +349,11 @@
                 fullTabLoading:false,
                 fullScreenLoading:false,
                 dictStrategyTableData:[],
-                showTestResult:false
+                showTestResult:false,
+                activeNames: [],
+                removeDialogText:'',
+                removeType:'',
+                deleteScope:null
             }
         },
         computed: {
@@ -387,7 +408,7 @@
             refresh() {
                 this.handleDictQuery();
             },
-            handleItemEdit(scope){
+            handleStrategyEdit(scope){
                 let row = scope.row;
                 this.confirmToOpenDictStrategyDialogVisible = true;
                 this.fullScreenLoading  = true;
@@ -420,7 +441,7 @@
                 })
 
             },
-            handleItemDelete(scope){
+            handleDomainDelete(scope){
 
                 let row = scope.row;
                 let fieldDomain = row.field_domain;
@@ -530,10 +551,7 @@
                 })
 
             },
-            // handleItemAdd(scope){
-            //     let index = scope.$rowIndex;
-            //    this.dictTableData[index].dict_list.push({});
-            // },
+          
             addDictItem(){
                 this.confirmToOpenDictBaseDialogVisible = true;
             },
@@ -747,7 +765,32 @@
                     this.fullTabLoading = false;
                 })
 
+            },
+            handleDeleteDialog(scope,type){
+                this.deleteScope = scope;
+                this.removeType = type;
+                this.confirmToRemoveDialogVisible = true;
+                if(type == 'domain'){
+                    this.removeDialogText = "Confirm to remove this Domain,Item ?";
+                }
+                if(type == 'value'){
+                    this.removeDialogText = "Confirm to remove this value?";
+                }
+            },
+            confirmToRemove(){
+                let scope = this.deleteScope;
+                let type = this.removeType;
+                if(type == 'domain'){
+                    this.handleDomainDelete(scope);
+
+                }
+                if(type == 'value'){
+                    this.handleValDelete(scope);
+                }
+                this.confirmToRemoveDialogVisible = false;
             }
+
+
         }
 
     }
