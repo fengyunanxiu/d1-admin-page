@@ -462,7 +462,9 @@
         },
         tableDataCustomerVisible: false,
         tableDataCustomerDetails:'',
-        sortArr:[]
+        sortArr:[],
+        basicCascadeInform:{},
+        fieldNameCascade:{}
       }
     },
     computed: {
@@ -628,28 +630,31 @@
               }
               else if (typeof item.field_value === 'object') {  //输入类型为object
                 let specialparamValues = [];
-                this.specialParam[item.db_field_name] = specialparamValues;  //放入数组
-                for (let j = 0; j < item.field_value.length; j++) {
+                if(item.field_value){
+                    this.specialParam[item.db_field_name] = specialparamValues;  //放入数组
+                    for (let j = 0; j < item.field_value.length; j++) {
 
-                  let value = item.field_value[j];  //输入的值
+                        let value = item.field_value[j];  //输入的值
 
-                  if (value != null) {
-                    // if (item.form_field_query_type === QueryFormType.DATE_RANGE) {  //输入的是双时间
-                    //   value = this.timeFormatConvert(value);
-                    // }
+                        if (value != null) {
+                            // if (item.form_field_query_type === QueryFormType.DATE_RANGE) {  //输入的是双时间
+                            //   value = this.timeFormatConvert(value);
+                            // }
 
-                    if (param === '') {
-                      param = item.db_field_name + '=' + encodeURIComponent(value);
-                    } else {
-                      param = param + '&' + item.db_field_name + '=' + encodeURIComponent(value);
+                            if (param === '') {
+                                param = item.db_field_name + '=' + encodeURIComponent(value);
+                            } else {
+                                param = param + '&' + item.db_field_name + '=' + encodeURIComponent(value);
+                            }
+                            if(this.specialParam[item.db_field_name] == null){
+                                this.specialParam[item.db_field_name] = value;
+                            }
+                            specialparamValues.push(value);
+
+                        }
                     }
-                    if(this.specialParam[item.db_field_name] == null){
-                      this.specialParam[item.db_field_name] = value;
-                    }
-                    specialparamValues.push(value);
-
-                  }
                 }
+
               } else if (typeof item.field_value === 'string') {
                 if (item.field_value !== '') {
 
@@ -1019,7 +1024,7 @@
 
         if (this.loadFormTableOnCreate) {
 
-          this.loadFormTableSettibg();
+          this.loadFormTableSetting();
         } else {
           this.pageSettingDataFormClone = util.deepClone(this.pageSettingData.form);
         }
@@ -1205,32 +1210,14 @@
           this.dataFacetKey = dataFacetKey;
 
       },
-        loadFormTableSettibg(){
+        loadFormTableSetting(){
             this.dataLoading = true;
             this.http.get(this.fullFormTableUrl).then(resp => {
                 let data = resp.data;
                 let form = data.form;
-                // if (form != null && form.length > 0) {
-                //   for (let i = 0; i < form.length; i++) {
-                //     let item = form[i];
-                //     if (item.field_optional_value_list != null && item.field_optional_value_list.length > 0) {
-                //       let optionList = [];
-                //       for (let j = 0; j < item.field_optional_value_list.length; j++) {
-                //         let optionsValue = item.field_optional_value_list[j];
-                //         let fieldKey = item.db_field_name;
-                //         let option = {};
-                //         option.id = optionsValue;
-                //         option.name = optionsValue;
-                //         optionList.push(option);
-                //       }
-                //       item.field_optional_value_list = optionList;
-                //
-                //     }
-                //   }
-                // }
-
                 this.pageSettingData = data;
 
+                this.pageSettingData.form = this.handleCascade(form);
                 this.pageSettingDataFormClone = util.deepClone(this.pageSettingData.form);
                 // TOFIXED
                  this.$emit("completeLoadForm", this.pageSettingData);
@@ -1245,6 +1232,83 @@
                 console.error(error);
                 this.dataLoading = false;
             });
+        },
+        handleCascade(form){
+            //1.提取全部的级联关系
+            //2。提取默认全部选中
+            //3。构建真正的级联关系
+            this.basicCascadeInform = {};
+            this.fieldNameCascade = {};
+            let childFieldNameList = [];
+            //第一轮遍历，填充默认下拉框的值，并复制基础级联结构
+            for(let i=0; i< form.length; i++){
+                let formItem = form[i];
+                if(formItem.field_cascade_optional_value_list){
+                    formItem.field_optional_value_list = [];
+                    this.fieldNameCascade[formItem.db_field_name] = formItem.field_cascade_child_field_name;
+                    childFieldNameList.push(formItem.field_cascade_child_field_name);
+                    this.basicCascadeInform[formItem.db_field_name] = formItem.field_cascade_optional_value_list;
+                    for(let j=0; j< formItem.field_cascade_optional_value_list.length; j++){
+                        let fieldOptionValue = {};
+                        formItem.field_optional_value_list.push(fieldOptionValue);
+                        fieldOptionValue.option_label = formItem.field_cascade_optional_value_list[j].option_label;
+                        fieldOptionValue.option_value = formItem.field_cascade_optional_value_list[j].option_value;
+                    }
+                }
+            }
+            //第二轮遍历， 取消级联关系中所有下级的数据
+            for(let i=0; i< form.length; i++) {
+                let formItem = form[i];
+                if(this.inArray(childFieldNameList, formItem.db_field_name)){
+                    formItem.field_optional_value_list = [];
+                }
+            }
+          return form;
+
+        },
+        selectorChange(dbFieldName, chooseValueList) {
+          //只考虑级联的下一级
+            let childFieldName = this.basicCascadeInform[dbFieldName];
+            let form = this.pageSettingData.form;
+            //只有存在级联关系时才需要往下继续
+            if (this.basicCascadeInform[dbFieldName]) {
+                for (let i = 0; i < form.length; i++) {
+                    let formItem = form[i];
+                    //仅控制这一级
+                  if(childFieldName === formItem.db_field_name){
+                      //为这一级赋值
+                      formItem = this.this.fullChildFieldSelector(dbFieldName, chooseValueList, formItem.field_optional_value_list, formItem);
+
+                      //还存在下级，继续往下迭代
+                      if(formItem.field_cascade_child_field_name){
+                          this.selectorChange(formItem.db_field_name, fieldOptionalValueList);
+                      }
+
+                  }
+
+                }
+            }
+        },
+        fullChildFieldSelector(parentFieldName, parentChooseValueList, childChooseValueList , formItem){
+            let cascadeOptionsList = this.basicCascadeInform[parentFieldName];
+            //1.加载全部可选项
+            formItem.field_optional_value_list = [];
+            for (let i = 0; i < cascadeOptionsList.length; i++) {
+               let parentOptional = cascadeOptionsList[i];
+                if(this.inArray(parentChooseValueList, parentOptional.option_value)){
+                    formItem.field_optional_value_list.push(parentOptional.children);
+                }
+            }
+            //2。遍历可选项,取出可选项value list
+            let optionalValueList = [];
+            for (let i = 0; i < formItem.field_optional_value_list.length; i++) {
+                let optionalValue = formItem.field_optional_value_list[i].option_value;
+                optionalValueList.push(optionalValue);
+            }
+            //3. 两个数组取交集
+            let intersection = optionalValueList.filter(v => b.includes(childChooseValueList));
+            formItem.field_value = intersection;
+            return formItem;
         }
     }
   }

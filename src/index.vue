@@ -34,7 +34,7 @@
                     </div>
 
 
-                    <div class="area-two" v-if="showD1VueComponent">
+                    <div class="area-two" v-show="showD1VueComponent">
                         <div class ="area">
                             <d1-vue-component ref="d1VueComponet" :options="generateOption"
                                 @onToolbarButtonClick="handleToolbarButtonClick"
@@ -136,8 +136,7 @@
                 options.dataFacetKey = this.dsFacetKey;
                 // this.$refs.d1VueComponet.setDataFacetKey(this.dsFacetKey);
                 this.$refs.d1VueComponet.initOptions(options);
-
-                 this.$refs.d1VueComponet.loadFormTableSettibg();
+                 this.$refs.d1VueComponet.loadFormTableSetting();
                  this.$refs.d1VueComponet.runQuery();
             },
             completeLoadForm(){
