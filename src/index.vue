@@ -131,13 +131,24 @@
                 console.info(name);
             },
             handleQuery(){
+
+                if(!this.dsFacetKey){
+                    this.$message.warning('Please input data facet key');
+                    return;
+                }
                 this.showD1VueComponent = true;
-               let options = JSON.parse(this.d1Options);
-                options.dataFacetKey = this.dsFacetKey;
-                // this.$refs.d1VueComponet.setDataFacetKey(this.dsFacetKey);
-                this.$refs.d1VueComponet.initOptions(options);
-                 this.$refs.d1VueComponet.loadFormTableSetting();
-                 this.$refs.d1VueComponet.runQuery();
+                try{
+                    let options = JSON.parse(this.d1Options);
+                    options.dataFacetKey = this.dsFacetKey;
+                    // this.$refs.d1VueComponet.setDataFacetKey(this.dsFacetKey);
+                    this.$refs.d1VueComponet.initOptions(options);
+                    this.$refs.d1VueComponet.loadFormTableSetting();
+                    this.$refs.d1VueComponet.runQuery();
+                }catch (data) {
+                    this.$message.warning('Failed to initialize component: invalid parameter');
+                }
+
+
             },
             completeLoadForm(){
                 this.showD1VueComponent = true;
