@@ -58,7 +58,7 @@
                 </el-form-item>
 
                 <el-form-item label="SQL: " >
-                    <el-input v-model="dictStrategyDO.param_sql" placeholder="select count(*) from queue_message" type="textarea" :disabled="dictStrategyDO.type != 'SQL' "  size="small"></el-input>
+                    <el-input v-model="dictStrategyDO.param_sql" placeholder="select id as value,id as sequence, model_name as label from model limit 10" type="textarea" :disabled="dictStrategyDO.type != 'SQL' "  size="small"></el-input>
                 </el-form-item>
 
                 <el-form-item label="Enable: "  >
@@ -390,12 +390,14 @@
         },
         methods:{
             handleDictQuery(){
+                this.fullTabLoading = true;
                 this.http.get(this.fullQueryDictUrl).then(resp =>{
+                    this.fullTabLoading = false;
                     let data = resp.data;
                     this.dictTableData = data.content;
                     this.dictTotalRecord = data.total_elements;
                 }).catch(error =>{
-                    this.tabScreenLoading = false;
+                    this.fullTabLoading = false;
                 })
             },
             handleSizeChange(val) {
@@ -529,7 +531,6 @@
 
 
                 let url = this.baseUrl + "d1-core/d1/dict/manage/value";
-
                 this.tableLoading = true;
                 this.http.delete(url,idArr).then(resp =>{
                     this.tableLoading = false;
@@ -546,17 +547,14 @@
                         this.handleDictQuery();
                     }
 
-
                 }).catch(error =>{
                     this.tableLoading = false;
                 })
 
             },
-          
             addDictItem(){
                 this.confirmToOpenDictBaseDialogVisible = true;
             },
-            //TODO
             closeDictStrategyMethod(){
                 this.dictStrategyDO = {
                     id:"",
@@ -761,7 +759,8 @@
                 this.http.post(url,data).then(resp =>{
                     this.$message.success('Operation Success');
                     this.fullTabLoading = false;
-                    this.$refs.xTable.refreshData();
+                    // this.$refs.xTable.refreshData();
+                    this.handleDictQuery();
                 }).catch(error =>{
                     this.fullTabLoading = false;
                 })
