@@ -411,7 +411,7 @@
                                 field: 'optional_dic_val',
                                 minWidth: 100,
                                 title: 'Optional Values',
-                                editRender: {name: 'input'},
+                              // editRender: {name: 'input'},
                                 formatter:function(obj){
                                     let row = obj.row;
                                     if(row.form_field_dict_domain_name){
@@ -883,9 +883,35 @@
             },
             saveDefaultSelect(){
                 let url = this.baseUrl + 'd1-core/d1/defaults-configuration';
+
+                // 校验输入的为json数组
+                if(this.defaultsConfigurationDO.field_type =='MANUAL'){
+                    let manualVal = this.defaultsConfigurationDO.manual_conf;
+                    if(manualVal){
+                        try{
+                            let manualValArr = JSON.parse(manualVal);
+                            if( manualValArr instanceof  Array){
+                                // Nothing to do
+                            }else{
+                                this.$message.warning("Manual Method's value must be a json array ")
+                                return;
+                            }
+                        }catch (e) {
+                            this.$message.warning("Manual Method's value must be a json array ")
+                            return;
+                        }
+                    }
+                }
+
+
                 this.tabScreenLoading = true;
                 this.http.post(url, this.defaultsConfigurationDO).then(resp =>{
                     this.clickRow.form_field_def_val_strategy = this.defaultsConfigurationDO.field_type;
+
+                    if(this.defaultsConfigurationDO.field_type =='MANUAL'){
+                        this.clickRow.form_field_default_val = this.defaultsConfigurationDO.manual_conf;
+                    }
+
                     this.tabScreenLoading =false;
                     this.confirmToOpenDefaultDialogVisible =false;
                 }).catch(error =>{

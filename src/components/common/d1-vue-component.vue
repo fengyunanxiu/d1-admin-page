@@ -1222,10 +1222,17 @@
                 let form = data.form;
                 this.pageSettingData = data;
                 //null or empty初始化
+
+
+              this.pageSettingData.form = this.handleDefaultVal(form);
+
                 this.pageSettingData.form = this.handleNullOrEmpty(form);
 
                 //级联初始化
                 this.pageSettingData.form = this.handleCascade(form);
+
+
+
                 this.pageSettingDataFormClone = util.deepClone(this.pageSettingData.form);
                 // TOFIXED
                  this.$emit("completeLoadForm", this.pageSettingData);
@@ -1343,6 +1350,58 @@
                 }
             }
             return form;
+        },
+        // 后台为json化 数组字符串
+        handleDefaultVal(form){
+          for(let i=0; i < form.length; i++){
+            let formItem = form[i];
+            let fieldValue = formItem.field_value
+            if(fieldValue){
+              try{
+                let fieldValArr =  JSON.parse(fieldValue);
+                if(fieldValArr instanceof Array){
+                  if(formItem.form_field_query_type == this.formType.MULTIPLE_CHOICE_LIST ){
+                    formItem.field_value = fieldValArr;
+                  }else if(formItem.form_field_query_type == this.formType.DATE_RANGE ||
+                          formItem.form_field_query_type == this.formType.DATE_TIME_RANGE ||
+                          formItem.form_field_query_type == this.formType.NUMBER_RANGE){
+                    if(fieldValArr){
+                      if(fieldValArr[0]){
+                        formItem.field_value__start__ = fieldValArr[0];
+                      }
+                      if(fieldValArr[1]){
+                        formItem.field_value__end__ = fieldValArr[1];
+                      }
+                    }
+                  }else{
+                    if(fieldValArr[0]){
+                      formItem.field_value = fieldValArr[0];
+                    }
+                  }
+
+                }else{
+                  console.log(formItem.db_field_name + ": " + formItem.field_value + " is not array");
+                  // 不符合格式设为''
+                  this.handleMisformVal(formItem);
+                }
+              }catch(data){
+                console.log(data);
+                this.handleMisformVal(formItem);
+              }
+
+
+            }
+          }
+          return form;
+        },
+        handleMisformVal(formItem){
+            if(formItem.form_field_query_type == this.formType.MULTIPLE_CHOICE_LIST ){
+              formItem.field_value = [];
+            }else{
+              formItem.field_value = '';
+            }
+
+
         }
     }
   }
