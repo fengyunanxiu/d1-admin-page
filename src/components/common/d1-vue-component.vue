@@ -464,7 +464,11 @@
         tableDataCustomerDetails:'',
         sortArr:[],
         basicCascadeInform:{},
-        fieldNameCascade:{}
+        fieldNameCascade:{},
+        specialFormTypeChoiceNullOrEmpty: {
+            optionalValue: '__SPECIAL_FORM_TYPE_CHOICE_NULL_OR_EMPTY__',
+            optionalLabel: 'Null Or Empty'
+        },
       }
     },
     computed: {
