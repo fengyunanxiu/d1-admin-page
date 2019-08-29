@@ -1221,7 +1221,10 @@
                 let data = resp.data;
                 let form = data.form;
                 this.pageSettingData = data;
+                //null or empty初始化
+                this.pageSettingData.form = this.handleNullOrEmpty(form);
 
+                //级联初始化
                 this.pageSettingData.form = this.handleCascade(form);
                 this.pageSettingDataFormClone = util.deepClone(this.pageSettingData.form);
                 // TOFIXED
@@ -1250,6 +1253,8 @@
                 let formItem = form[i];
                 if(formItem.field_cascade_optional_value_list){
                     formItem.field_optional_value_list = [];
+                    //add null or empty
+                    formItem.field_optional_value_list.push({option_label: this.specialFormTypeChoiceNullOrEmpty.optionalLabel, option_value: this.specialFormTypeChoiceNullOrEmpty.optionalValue});
                     this.fieldNameCascade[formItem.db_field_name] = formItem.field_cascade_child_field_name;
                     childFieldNameList.push(formItem.field_cascade_child_field_name);
                     this.basicCascadeInform[formItem.db_field_name] = formItem.field_cascade_optional_value_list;
@@ -1266,6 +1271,8 @@
                 let formItem = form[i];
                 if(this.inArray(childFieldNameList, formItem.db_field_name)){
                     formItem.field_optional_value_list = [];
+                    formItem.field_optional_value_list.push({option_label: this.specialFormTypeChoiceNullOrEmpty.optionalLabel, option_value: this.specialFormTypeChoiceNullOrEmpty.optionalValue});
+
                 }
             }
           return form;
@@ -1298,6 +1305,8 @@
             let cascadeOptionsList = this.basicCascadeInform[parentFieldName];
             //1.加载全部可选项
             formItem.field_optional_value_list = [];
+            formItem.field_optional_value_list.push({option_label: this.specialFormTypeChoiceNullOrEmpty.optionalLabel, option_value: this.specialFormTypeChoiceNullOrEmpty.optionalValue});
+
             for (let i = 0; i < cascadeOptionsList.length; i++) {
                let parentOptional = cascadeOptionsList[i];
                 if(this.inArray(parentChooseValueList, parentOptional.option_value)){
@@ -1317,6 +1326,23 @@
             //3. 两个数组取交集
             formItem.field_value = optionalValueList.filter(v => childChooseValueList.includes(v));
             return formItem;
+        },
+        handleNullOrEmpty(form){
+            for(let i=0; i< form.length; i++) {
+                let formItem = form[i];
+                if(formItem.form_field_query_type === this.formType.MULTIPLE_CHOICE_LIST
+                  || formItem.form_field_query_type === this.formType.SINGLE_CHOICE_LIST
+                  || formItem.form_field_query_type === this.formType.SINGLE_CHOICE_LIST_R1){
+                    if(formItem.field_optional_value_list){
+                        formItem.field_optional_value_list.splice(0,0,{option_label: this.specialFormTypeChoiceNullOrEmpty.optionalLabel, option_value: this.specialFormTypeChoiceNullOrEmpty.optionalValue});
+                    }else{
+                        formItem.field_optional_value_list = [];
+                        formItem.field_optional_value_list.push({option_label: this.specialFormTypeChoiceNullOrEmpty.optionalLabel, option_value: this.specialFormTypeChoiceNullOrEmpty.optionalValue});
+                    }
+
+                }
+            }
+            return form;
         }
     }
   }
