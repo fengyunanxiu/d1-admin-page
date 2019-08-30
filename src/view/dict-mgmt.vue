@@ -1,5 +1,5 @@
 <template>
-    
+
     <div  v-loading="fullTabLoading"
           element-loading-text="Loading, please wait..."
           element-loading-spinner="el-icon-loading"
@@ -93,7 +93,7 @@
 
             <div slot="footer" class="dialog-footer">
                 <el-button type="primary"   @click="saveDictStrategy">Save</el-button>
-                <el-button type="danger" @click="confirmToOpenDictStrategyDialogVisible = false">Close</el-button>
+                <el-button  @click="confirmToOpenDictStrategyDialogVisible = false">Close</el-button>
             </div>
         </el-dialog>
 
@@ -114,26 +114,36 @@
             >
             <el-row>
 
-                <el-form-item  label="Domain: " >
+                <el-form-item  label="Domain: " required>
                     <el-input  v-model="dictBaseDO.domain"   size="small"></el-input>
                 </el-form-item>
 
-                <el-form-item label="Item: " >
+                <el-form-item label="Item: " required>
                     <el-input v-model="dictBaseDO.item"   size="small"></el-input>
                 </el-form-item>
             </el-row>
+            </el-form>
+            <div style="padding: 10px"> <b>Value&Label List </b></div>
+            <div class="area">
+                <el-form
 
-                <div style="padding: 10px"> Value&Label List </div>
-
+                        label-position="top"  :inline="true"
+                >
                 <template v-for = "(item, index) in valueLabelList">
                     <el-row>
-                    <el-form-item  label="Value: " >
+                    <el-form-item v-if="index === 0" label="Value: " >
                         <el-input  v-model="item.value"   size="small"></el-input>
                     </el-form-item>
+                        <el-form-item v-else >
+                            <el-input  v-model="item.value"   size="small"></el-input>
+                        </el-form-item>
 
-                    <el-form-item label="Label: " >
+                    <el-form-item v-if="index === 0" label="Label: " >
                         <el-input v-model="item.label"   size="small"></el-input>
                     </el-form-item>
+                        <el-form-item v-else>
+                            <el-input v-model="item.label"   size="small"></el-input>
+                        </el-form-item>
 
                         <el-form-item >
                    <el-button size="small" @click="addValueLabelList(index)" >+</el-button>
@@ -142,9 +152,8 @@
                         <el-button size="small" @click="deleteValueLabelList(index)" >-</el-button>
                         </el-form-item>
                     </el-row>
-                </template>
-
-            </el-form>
+                </template></el-form>
+            </div>
 
 
 
@@ -153,7 +162,7 @@
 
             <div slot="footer" class="dialog-footer">
                 <el-button type="primary"   @click="saveDictBase()">Save</el-button>
-                <el-button type="danger" @click="confirmToOpenDictBaseDialogVisible = false">Close</el-button>
+                <el-button @click="confirmToOpenDictBaseDialogVisible = false">Close</el-button>
             </div>
 
 
@@ -211,7 +220,7 @@
                 <el-col :span="6" style="text-align: right">
                     <el-button size="mini" type="success" @click="addDictItem()">Add</el-button>
 
-                    <el-button size="mini" type="success" @click="saveDictItem()">Save</el-button>
+                    <el-button size="mini" type="primary" @click="saveDictItem()">Save</el-button>
                 </el-col>
 
 
@@ -552,7 +561,7 @@
                 })
 
             },
-          
+
             addDictItem(){
                 this.confirmToOpenDictBaseDialogVisible = true;
             },
@@ -699,7 +708,7 @@
                     label:''
                 }
                 this.valueLabelList.splice(index + 1,0,valueLabelDO);
-                
+
             },
             deleteValueLabelList(index){
                 this.valueLabelList.splice(index ,1);
@@ -815,6 +824,33 @@
     /deep/ .el-collapse-item__header{
         height: 35px;
         line-height: 35px;
+    }
+
+    .area {
+        padding: 10px;
+        border: 1px solid #d1dbe5;
+        border-radius: 4px;
+        overflow: hidden;
+        /*box-shadow: 0 2px 4px 0 rgba(0, 0, 0, .12), 0 0 6px 0 rgba(0, 0, 0, .04);*/
+        font-size: 10px;
+    }
+    .area .el-form-item{
+        margin-left: 20px;
+    }
+
+    .el-form--inline .el-form-item {
+        display: inline-block;
+        margin-right: 10px;
+        vertical-align: bottom;
+    }
+
+    .area /deep/ .el-form-item__label {
+        float: none;
+        display: inline-block;
+        text-align: left;
+        padding: 0 0 10px;
+        line-height: 10px;
+        margin-top: 10px;
     }
 
 </style>
