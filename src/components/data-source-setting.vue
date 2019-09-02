@@ -266,14 +266,11 @@
                       :columns="tableColumns"
                       highlight-current-column
                       row-id="id"
-                      :edit-config="{trigger: 'dblclick', mode: 'cell', showStatus: true}"
-                      :mouse-config="{selected: true}"
-                      :keyboard-config="{isArrow: true, isDel: true, isTab: true, isEdit: true}"
+                      :edit-config="editConfig"
                       :data.sync="tableData"
                       @cell-dblclick="openDictionaryDialog"
+                      :cell-class-name ='colorClassChange'
             >
-
-
 
             </vxe-grid>
 
@@ -299,6 +296,31 @@
         },
         data() {
             return {
+
+                editConfig:{
+                    trigger: 'dblclick',
+                    mode: 'cell',
+                    activeMethod : function(obj){
+                        return false;
+                        console.log(obj);
+                        // let row = obj.row;
+                        // let column = obj.column;
+                        // let property = column.property;
+                        // // 颜色更改
+                        // if ((row.form_field_query_type == QueryFormType.MULTIPLE_CHOICE_LIST ||
+                        //     row.form_field_query_type == QueryFormType.SINGLE_CHOICE_LIST ||
+                        //     row.form_field_query_type == QueryFormType.SINGLE_CHOICE_LIST_R1)){
+                        //     if(property == 'form_field_default_val' || property == 'form_field_use_default_val' ||  property == 'form_field_def_val_strategy')
+                        //
+                        //         return true;
+                        // }else{
+                        //     if(property == 'optional_dic_val' || property == 'form_field_child_field_name'){
+                        //         return false;
+                        //     }
+                        // }
+                    },
+                    showStatus:true
+                },
                 tabScreenLoading:false ,
                 tableColumns: [{
                     type: 'index',
@@ -404,20 +426,21 @@
                                 field: 'form_field_child_field_name',
                                 minWidth: 100,
                                 title: 'Child Field Name',
-                                editRender: {name: 'input'}
+                                editRender: {name: 'input'},
+
                                 // TODO ,select 查询；使用现用的字段
                             },
                             {
                                 field: 'optional_dic_val',
                                 minWidth: 100,
                                 title: 'Optional Values',
-                              // editRender: {name: 'input'},
+                                editRender: {name: 'input'},
                                 formatter:function(obj){
                                     let row = obj.row;
                                     if(row.form_field_dict_domain_name){
                                         return row.form_field_dict_domain_name + ' + ' + row.form_field_dict_item;
                                     }
-                                    return null;
+                                    return '';
 
                                 }
                             },
@@ -614,7 +637,35 @@
 
                 },
                 showTestResult:false,
-                testResult:null
+                testResult:null,
+                // 更改cell样式，并在这里进行改值
+                colorClassChange:function (obj) {
+                    //return 'color-gray';
+                    let row = obj.row;
+                    let column = obj.column;
+                    let property = column.property;
+                    // 颜色更改
+                    if ((row.form_field_query_type == QueryFormType.MULTIPLE_CHOICE_LIST ||
+                        row.form_field_query_type == QueryFormType.SINGLE_CHOICE_LIST ||
+                        row.form_field_query_type == QueryFormType.SINGLE_CHOICE_LIST_R1)){
+                        if(property == 'form_field_default_val' || property == 'form_field_use_default_val' ||  property == 'form_field_def_val_strategy')
+                            // row.form_field_use_default_val = 0;
+                            // row.form_field_default_val = null;
+                            // row.form_field_def_val_strategy = '';
+                            return 'color-gray';
+                    }else{
+                        if(property == 'optional_dic_val' || property == 'form_field_child_field_name'){
+                            // row.optional_dic_val = null;
+                            // row.form_field_dict_domain_name = null;
+                            // row.form_field_dict_item = null;
+
+                            return 'color-gray';
+                        }
+                    }
+                    return '';
+                },
+
+
             }
         },
         computed:{
@@ -693,13 +744,17 @@
 
                 for(var i in saveDataArr){
                     let rowData = saveDataArr[i];
-
-                    let queryType = rowData.form_field_query_type
-                    if(QueryFormType.SINGLE_CHOICE_LIST_R1 === queryType || QueryFormType.SINGLE_CHOICE_LIST === queryType || QueryFormType.MULTIPLE_CHOICE_LIST === queryType){
+                    let fieldName = rowData.db_field_name;
+                    let queryType = rowData.form_field_query_type;
+                    if(QueryFormType.SINGLE_CHOICE_LIST_R1 === queryType || QueryFormType.SINGLE_CHOICE_LIST === queryType
+                        || QueryFormType.MULTIPLE_CHOICE_LIST === queryType){
                         if(!rowData.form_field_dict_domain_name ){
-                            this.$message.warning('Element Type like:SINGLE_CHOICE_LIST_R1,SINGLE_CHOICE_LIST,MULTIPLE_CHOICE_LIST ,Optional Values can not be empty');
+                            this.$message.warning('Element Type like:SINGLE_CHOICE_LIST_R1,SINGLE_CHOICE_LIST,MULTIPLE_CHOICE_LIST ,Optional Values can not be empty;example:' +fieldName);
                             return;
                         }
+                     
+
+
                     }
                 }
                 this.tabScreenLoading = true;
@@ -951,6 +1006,26 @@
                 }).catch(error =>{
                     this.tabScreenLoading = false;
                 })
+            },
+            // 交互
+            activeCellMethod(obj){
+                return false;
+                // let row = obj.row;
+                // let column = obj.column;
+                // let property = column.property;
+                // // 颜色更改
+                // if ((row.form_field_query_type == QueryFormType.MULTIPLE_CHOICE_LIST ||
+                //     row.form_field_query_type == QueryFormType.SINGLE_CHOICE_LIST ||
+                //     row.form_field_query_type == QueryFormType.SINGLE_CHOICE_LIST_R1)){
+                //     if(property == 'form_field_default_val' || property == 'form_field_use_default_val' ||  property == 'form_field_def_val_strategy')
+                //
+                //         return true;
+                // }else{
+                //     if(property == 'optional_dic_val' || property == 'form_field_child_field_name'){
+                //         return false;
+                //     }
+                // }
+                // return true;
             }
 
         }
@@ -1044,6 +1119,10 @@
 
     /deep/ .vxe-table.size--small .vxe-body--column, /deep/ .vxe-table.size--small .vxe-footer--column, /deep/ .vxe-table.size--small .vxe-header--column {
         padding: 2px 0;
+    }
+
+    /deep/ .color-gray{
+        background-color: gray;
     }
 
 
