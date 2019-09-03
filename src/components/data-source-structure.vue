@@ -117,9 +117,6 @@
            <i class="fa fa-table" aria-hidden="true" v-else-if="node.level === 3"></i>
            <i class="fa fa-puzzle-piece" aria-hidden="true" v-else> </i>
 
-
-
-               <!--<i class="el-icon-right fa-2x tool-icon-right cursor" aria-hidden="true" @click="showDataSource = true"></i>-->
                 {{ splitTableName(node.label) }}
 
         </span>
@@ -179,8 +176,6 @@
       props: {
 
       },
-
-
       data() {
         return {
           addDataFacetKeyDialogVisible: false,
@@ -303,25 +298,6 @@
           }
 
           if(node.level == 1){
-            // for(let i= 0 ;i < this.structure.length ; i ++){
-            //   if(data.id == this.structure[i].id){
-            //     // if(! this.structure.children){
-            //     //
-            //     // }
-            //     let url = this.baseUrl + '/d1/datasource/select?dsId=' + data.id;
-            //     this.http.get(url).then(resp =>{
-            //       let data = resp.data;
-            //       if(data){
-            //         this.structure[i].children = data[0].children;
-            //       }
-            //
-            //     }).catch(error => {
-            //       this.$message.error('Loading Failed');
-            //       console.error(error);
-            //     })
-            //   }
-            //
-            // }
               //nothing todo
           }
 
@@ -330,8 +306,6 @@
         },
           loadStructure(){
             let url = this.baseUrl + 'd1-core/d1/datasource/select';
-             //let url = "http://192.168.199.232:8080" + '/d1/datasource/select';
-              // let url ="http://192.168.199.141:10002/authentication/menus";
             this.http.get(url).then(resp => {
                 this.structure = resp.data;
 
@@ -360,13 +334,6 @@
                    nodeList.splice(i, i+1);
                     return ;
                 }
-                // 不需要遍历，这里要求取第一级节点
-                // if(nodeItem.children != null){
-                //     for(let j = 0; j < nodeItem.children.length; j ++){
-                //         let nodeItemChildren = nodeItem.children[j];
-                //         this.deleteNode(nodeItemChildren, nodeId);
-                //     }
-                // }
               }
             }
           },
@@ -397,11 +364,7 @@
             }).catch(error => {
               this.editDataFacetKeyDialogVisible = false;
                 this.fullScreenLoading = false;
-
             })
-
-
-
           }else{
             this.$message.warning("Please Select Datasource Key Node");
           }
@@ -423,7 +386,6 @@
                   return;
               }
           }
-
 
         },
         saveEditDataFacetKey(){
@@ -458,8 +420,6 @@
 
               this.fullScreenLoading = false;
             this.editDataFacetKeyDialogVisible = false;
-
-
           })
 
         },

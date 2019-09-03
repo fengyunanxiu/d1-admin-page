@@ -7,8 +7,13 @@
                    :center="true"
                    size="tiny">
 
-            <el-collapse ><!--form表单折叠板-->
+            <el-collapse  v-model="activeNames" ><!--form表单折叠板-->
                 <el-collapse-item name="1">
+                    <template slot="title">
+          <span style="text-align: right;width: 100%"> <template v-if="activeNames.includes('1')"> Collapse Filter </template>
+             <template v-else> Expand Filter </template>
+            &nbsp; </span>
+                    </template>
                 <el-form>
                     <el-row :gutter="10">
                         <el-col :xs="12" :sm="8" :md="6" :lg="4">
@@ -38,6 +43,11 @@
                         <el-button type="primary" size="small" @click="handleDictQuery"><i class="fa fa-search"
                                                                                        aria-hidden="true"></i> Search
                         </el-button>
+
+                        <el-button type="primary" size="small" @click="handleDictReset"><i class="fa fa-eraser"
+                                                                                           aria-hidden="true"></i> Reset
+                        </el-button>
+
 
                     </el-form-item>
                 </el-form>
@@ -93,25 +103,39 @@
 
 
 
-        <el-dialog title="Default Val"  :visible.sync="confirmToOpenDefaultDialogVisible"
+        <el-dialog title="Default Val Strategy"  :visible.sync="confirmToOpenDefaultDialogVisible"
                    :close-on-click-modal="false"
                    @closed ="closeDefaultMethod"
                    :center="true"
                    size="tiny">
            <el-row style="padding-bottom: 10px">
-               <el-col :span="3" style="text-align: right">DF Key:&nbsp;&nbsp;</el-col>
-               <el-col :span="8"> <el-input  :disabled="true"  v-model="defaultsConfigurationDO.form_df_key"></el-input> </el-col>
+               <el-col :span="2" style="text-align: right;padding-top: 5px">DF Key:&nbsp;&nbsp</el-col>
+               <el-col :span="5"> <el-input  :disabled="true"  v-model="defaultsConfigurationDO.form_df_key"></el-input> </el-col>
 
-               <el-col :span="3" style="text-align: right">Field Key:&nbsp;&nbsp;</el-col>
-               <el-col :span="8"> <el-input  :disabled="true"  v-model="defaultsConfigurationDO.form_field_key"></el-input> </el-col>
+               <el-col :span="3" style="text-align: right;padding-top: 5px">Field Key:&nbsp;&nbsp;</el-col>
+               <el-col :span="5"> <el-input  :disabled="true"  v-model="defaultsConfigurationDO.form_field_key"></el-input> </el-col>
+
+               <el-col :span="3" style="text-align: right;padding-top: 5px">Element Type:&nbsp;&nbsp;</el-col>
+               <el-col :span="6"> <el-input  :disabled="true"  v-model="defaultsConfigurationDO.element_type"></el-input> </el-col>
 
            </el-row>
 
 
             <el-form
-                    label-position="left"
+                    label-position="right"
                     label-width="120px"
             >
+
+
+
+                <el-radio v-model="defaultsConfigurationDO.field_type" label="MANUAL">Manual</el-radio>
+                <div style="padding-bottom: 10px"></div>
+
+                <el-form-item label="Value: " >
+                    <el-input  v-model="defaultsConfigurationDO.manual_conf" :disabled="defaultsConfigurationDO.field_type != 'MANUAL'" size="small"  :placeholder = "manualPlaceHolder"></el-input>
+                </el-form-item>
+
+                <div style="padding-bottom: 10px"></div>
                 <el-radio v-model="defaultsConfigurationDO.field_type" label="AUTO">Auto</el-radio>
                 <div style="padding-bottom: 10px"></div>
 
@@ -159,12 +183,6 @@
               </div>
 
 
-                <el-radio v-model="defaultsConfigurationDO.field_type" label="MANUAL">Manual</el-radio>
-                <div style="padding-bottom: 10px"></div>
-
-                <el-form-item label="Value: " >
-                    <el-input  v-model="defaultsConfigurationDO.manual_conf" :disabled="defaultsConfigurationDO.field_type != 'MANUAL'" size="small" placeholder = "JSON格式化字符串"></el-input>
-                </el-form-item>
 
 
 
@@ -230,7 +248,6 @@
 
                 <el-col :xs="9" :sm="9" :md="9" :lg="7" style="text-align: right;padding-right: 10px;padding-top: 3px">
 
-
                     <el-button size="mini" @click="refreshSetting"
                                type="danger"
                     > Refresh
@@ -254,8 +271,7 @@
         </div>
         <br/>
         <div class="table">
-
-            <vxe-grid border
+            <vxe-table border
                       ref="xTable"
                       resizable
                       stripe
@@ -263,16 +279,59 @@
                       highlight-current-row
                       highlight-hover-row
                       highlight-hover-column
-                      :columns="tableColumns"
                       highlight-current-column
                       row-id="id"
                       :edit-config="editConfig"
                       :data.sync="tableData"
-                      @cell-dblclick="openDictionaryDialog"
+                      @cell-dblclick="dbClickCustomOperation"
                       :cell-class-name ='colorClassChange'
             >
 
-            </vxe-grid>
+                <vxe-table-column type ="index" width ="40" title="No." fixed ="left"></vxe-table-column>
+
+                <vxe-table-column field='db_field_name' minWidth ="120" title="Field Name" fixed ="left"></vxe-table-column>
+                <vxe-table-column field='db_field_type' minWidth ="110" title="Field Type" fixed ="left"></vxe-table-column>
+                <vxe-table-column field='db_field_comment' minWidth ="120" title="Field Description" ></vxe-table-column>
+                <vxe-table-column field='view_field_label' minWidth ="120" title="Field Label" :editRender ="{name: 'input'}"></vxe-table-column>
+
+                <vxe-table-column title="Form" >
+                    <vxe-table-column field='form_field_visible' minWidth ="60" title="Show ?" :editRender ="elSwitchConfig"> </vxe-table-column>
+                    <vxe-table-column field='form_field_sequence' minWidth ="90" title="Sequence" :editRender ="elInputNumberConfig"></vxe-table-column>
+                    <vxe-table-column field='form_field_query_type' minWidth ="200" title="Element Type" :editRender ="elementTypeCofig"></vxe-table-column>
+                    <vxe-table-column field='form_field_child_field_name' minWidth ="100" title="Child Field Name" :editRender ="childFieldConfig"></vxe-table-column>
+                    <vxe-table-column field='optional_dic_val' minWidth ="100" title="Optional Values" :editRender ="{name: 'input'}" :formatter="dictValFormatter" ></vxe-table-column>
+                    <vxe-table-column field='form_field_use_default_val' minWidth ="100" title="Use Default Value?" :editRender ="elSwitchConfig"></vxe-table-column>
+                    <vxe-table-column field='form_field_def_val_strategy' minWidth ="100" title="Default Value Strategy" :editRender ="{name: 'input'}"></vxe-table-column>
+                    <vxe-table-column field='form_field_default_val' minWidth ="100" title="Default Value" ></vxe-table-column>
+                </vxe-table-column>
+
+                <vxe-table-column title="List / Table" >
+                    <vxe-table-column field='table_field_visible' minWidth ="60" title="Show ?" :editRender ="elSwitchConfig"> </vxe-table-column>
+                    <vxe-table-column field='table_field_sequence' minWidth ="90" title="Sequence" :editRender ="elInputNumberConfig"></vxe-table-column>
+                    <vxe-table-column field='table_field_order_by' minWidth ="110" title="Default Order By" :editRender ="{name: 'ElSelect',props: {clearable: false},options: [
+                       {label: 'NONE',value: 'NONE'}, {label: 'DESC',value: 'DESC'},{label: 'ASC',value: 'ASC'}]}"></vxe-table-column>
+
+                    <vxe-table-column field='table_field_column_width' minWidth ="70" title="Width" :editRender ="elInputNumberConfig"></vxe-table-column>
+                    <vxe-table-column field='table_parent_label' minWidth ="80" title="Parent Label" :editRender ="{name: 'input'}" ></vxe-table-column>
+                </vxe-table-column>
+
+                <vxe-table-column title="Export" >
+                    <vxe-table-column field='export_field_visible' minWidth ="60" title="Show ?" :editRender ="elSwitchConfig"> </vxe-table-column>
+                    <vxe-table-column field='export_field_sequence' minWidth ="90" title="Sequence" :editRender ="elInputNumberConfig"></vxe-table-column>
+                </vxe-table-column>
+                    <vxe-table-column type ="width" width ="90"  title='Operation'  fixed ="right"   >
+                        <template slot = "default" slot-scope="scope">
+                            <vxe-button @click="revertRow(scope)">Revert</vxe-button>
+                        </template>
+
+                        <template slot = "header" slot-scope="scope">
+                            Operation
+                            <vxe-button @click="revertTable">Revert</vxe-button>
+                        </template>
+                    </vxe-table-column>
+
+            </vxe-table>
+
 
 
         </div>
@@ -283,6 +342,7 @@
 
 
     import QueryFormType from "../assets/js/constant/query-form-type";
+    import util from '@/util/util.js'
 
     export default {
         name: "form-table-setting",
@@ -296,308 +356,147 @@
         },
         data() {
             return {
+                activeNames: ["1"],
+                elSwitchConfig:{
+                    name: 'ElSwitch', type: 'visible', props: {
+                        activeValue: 1,
+                        inactiveValue: 0,
+                        activeColor:"green",
+                        inactiveColor:"gray"
+                    }
+                },
+                elInputNumberConfig:{
+                    name: 'ElInputNumber', props: {max: 9999, min: 1}
+                },
+                childFieldConfig:{
+                    name: 'ElSelect', props: {
+                        clearable: true,
 
+                    },
+                    options: [],
+                    events:{
+                        clear:function (obj) {
+                            let row = obj.row;
+                            row.form_field_child_field_name = null;
+                        }
+                    }
+
+                },
+                elementTypeCofig:{
+                    name: 'ElSelect', props: {clearable: false},
+                    options: [
+
+                        {
+                            label: 'EXACT_MATCHING_TEXT',
+                            value: 'EXACT_MATCHING_TEXT'
+                        },{
+                            label: 'FUZZY_MATCHING_TEXT',
+                            value: 'FUZZY_MATCHING_TEXT'
+                        },
+                        {
+                            label: 'SINGLE_CHOICE_LIST_R1',
+                            value: 'SINGLE_CHOICE_LIST_R1'
+                        },  {
+                            label: 'SINGLE_CHOICE_LIST',
+                            value: 'SINGLE_CHOICE_LIST'
+                        },{
+                            label: 'MULTIPLE_CHOICE_LIST',
+                            value: 'MULTIPLE_CHOICE_LIST'
+                        },
+                        {
+                            label: 'DATE_RANGE',
+                            value: 'DATE_RANGE'
+                        },
+                        {
+                            label: 'SINGLE_DATE',
+                            value: 'SINGLE_DATE'
+                        }, {
+                            label: 'DATE_TIME_RANGE',
+                            value: 'DATE_TIME_RANGE'
+                        },{
+                            label: 'SINGLE_DATETIME',
+                            value: 'SINGLE_DATETIME'
+                        },
+                        {
+                            label: 'NUMBER_RANGE',
+                            value: 'NUMBER_RANGE'
+                        }
+                    ],
+                    events:{
+                        change:function (obj,val ) {
+                            let row = obj.row;
+                            let column = obj.column;
+                            let property = column.property;
+
+                            if((val == QueryFormType.MULTIPLE_CHOICE_LIST ||
+                                val == QueryFormType.SINGLE_CHOICE_LIST ||
+                                val == QueryFormType.SINGLE_CHOICE_LIST_R1)){
+
+                                if(val == QueryFormType.MULTIPLE_CHOICE_LIST){
+                                    row.form_field_child_field_name = null;
+                                }
+                                row.form_field_use_default_val = 0;
+                                row.form_field_default_val = null;
+                                row.form_field_def_val_strategy = null;
+
+                                if(row.defaults_configuration){
+                                    row.defaults_configuration.field_type="MANUAL";
+                                    row.defaults_configuration.manual_conf = "";
+                                }
+                            }else{
+                                // dict 相关的字段
+                                row.optional_dic_val = null;
+                                row.form_field_dict_domain_name = null;
+                                row.form_field_dict_item = null;
+                                row.form_field_child_field_name = null;
+
+                                if(row.dict_configuration){
+                                    row.dict_configuration.field_domain = null;
+                                    row.dict_configuration.field_item = null;
+                                }
+                            }
+                        }
+                    }
+                },
+                dictValFormatter: function(obj){
+                    let row = obj.row;
+                    if(row.form_field_dict_domain_name){
+                        return row.form_field_dict_domain_name + " + " + row.form_field_dict_item;
+                    }
+                    return '';
+
+                },
                 editConfig:{
                     trigger: 'dblclick',
                     mode: 'cell',
                     activeMethod : function(obj){
-                        return false;
-                        console.log(obj);
-                        // let row = obj.row;
-                        // let column = obj.column;
-                        // let property = column.property;
-                        // // 颜色更改
-                        // if ((row.form_field_query_type == QueryFormType.MULTIPLE_CHOICE_LIST ||
-                        //     row.form_field_query_type == QueryFormType.SINGLE_CHOICE_LIST ||
-                        //     row.form_field_query_type == QueryFormType.SINGLE_CHOICE_LIST_R1)){
-                        //     if(property == 'form_field_default_val' || property == 'form_field_use_default_val' ||  property == 'form_field_def_val_strategy')
-                        //
-                        //         return true;
-                        // }else{
-                        //     if(property == 'optional_dic_val' || property == 'form_field_child_field_name'){
-                        //         return false;
-                        //     }
-                        // }
+                        let row = obj.row;
+                        let column = obj.column;
+                        let property = column.property;
+                        // 样式， disabeled以及行为
+                        if ((row.form_field_query_type == QueryFormType.MULTIPLE_CHOICE_LIST ||
+                            row.form_field_query_type == QueryFormType.SINGLE_CHOICE_LIST ||
+                            row.form_field_query_type == QueryFormType.SINGLE_CHOICE_LIST_R1)){
+                            if(property == 'form_field_default_val' || property == 'form_field_use_default_val' ||  property == 'form_field_def_val_strategy')
+                                return false;
+                        }else{
+                            if(property == 'optional_dic_val'){
+                                return false;
+                            }
+                        }
+
+                        if(property == 'form_field_child_field_name'){
+                            if(row.form_field_query_type == QueryFormType.MULTIPLE_CHOICE_LIST){
+                                return  true;
+                            }else{
+                                return  false;
+                            }
+                        }
+                        return true;
                     },
                     showStatus:true
                 },
                 tabScreenLoading:false ,
-                tableColumns: [{
-                    type: 'index',
-                    width: 40,
-                    title: 'No.',
-                    fixed:'left'
-                },
-                    {
-                        field: 'db_field_name',
-                        title: 'Field Name',
-                        minWidth: 120,
-                        fixed:'left'
-                    },
-                    {
-                        field: 'db_field_type',
-                        title: 'Field Type',
-                        minWidth: 110,
-                        fixed:'left'
-                    },
-                    {
-                        field: 'db_field_comment',
-                        title: 'Field Description',
-                        minWidth: 120
-                    },
-                    {
-                        field: 'view_field_label',
-                        title: 'Field Label',
-                        minWidth: 120,
-                        editRender: {name: 'input'}
-                    },
-                    {
-                        field: '',
-                        title: 'Form',
-                        children: [
-                            {
-                                field: 'form_field_visible',
-                                title: 'Show ?',
-                                minWidth: 60,
-                                editRender: {
-                                    name: 'ElSwitch', type: 'visible', props: {
-                                        activeValue: 1,
-                                        inactiveValue: 0,
-                                        activeColor:"green",
-                                        inactiveColor:"gray"
-                                    }
-                                }
-                            },
-                            {
-                                field: 'form_field_sequence',
-                                minWidth: 90,
-                                title: 'Sequence',
-                                editRender: {name: 'ElInputNumber', props: {max: 9999, min: 1}},
-                                sortable:true
-                            },
-                            {
-                                field: 'form_field_query_type',
-                                minWidth: 200,
-                                title: 'Element Type',
-                                editRender: {
-                                    name: 'ElSelect', props: {clearable: false},
-                                    options: [
-
-                                        {
-                                            label: 'EXACT_MATCHING_TEXT',
-                                            value: 'EXACT_MATCHING_TEXT'
-                                        },{
-                                            label: 'FUZZY_MATCHING_TEXT',
-                                            value: 'FUZZY_MATCHING_TEXT'
-                                        },
-                                        {
-                                            label: 'SINGLE_CHOICE_LIST_R1',
-                                            value: 'SINGLE_CHOICE_LIST_R1'
-                                        },  {
-                                            label: 'SINGLE_CHOICE_LIST',
-                                            value: 'SINGLE_CHOICE_LIST'
-                                        },{
-                                            label: 'MULTIPLE_CHOICE_LIST',
-                                            value: 'MULTIPLE_CHOICE_LIST'
-                                        },
-                                        {
-                                            label: 'DATE_RANGE',
-                                            value: 'DATE_RANGE'
-                                        },
-                                        {
-                                            label: 'SINGLE_DATE',
-                                            value: 'SINGLE_DATE'
-                                        }, {
-                                            label: 'DATE_TIME_RANGE',
-                                            value: 'DATE_TIME_RANGE'
-                                        },{
-                                            label: 'SINGLE_DATETIME',
-                                            value: 'SINGLE_DATETIME'
-                                        },
-                                        {
-                                            label: 'NUMBER_RANGE',
-                                            value: 'NUMBER_RANGE'
-                                        }
-
-                                    ]
-                                }
-                            },
-                            {
-                                field: 'form_field_child_field_name',
-                                minWidth: 100,
-                                title: 'Child Field Name',
-                                editRender: {name: 'input'},
-
-                                // TODO ,select 查询；使用现用的字段
-                            },
-                            {
-                                field: 'optional_dic_val',
-                                minWidth: 100,
-                                title: 'Optional Values',
-                                editRender: {name: 'input'},
-                                formatter:function(obj){
-                                    let row = obj.row;
-                                    if(row.form_field_dict_domain_name){
-                                        return row.form_field_dict_domain_name + ' + ' + row.form_field_dict_item;
-                                    }
-                                    return '';
-
-                                }
-                            },
-                            {
-                                field: 'form_field_use_default_val',
-                                minWidth: 100,
-                                title: 'Use Default Value?',
-                                editRender: {
-                                    name: 'ElSwitch', type: 'visible', props: {
-                                        activeValue: 1,
-                                        inactiveValue: 0,
-                                        activeColor:"green",
-                                        inactiveColor:"gray"
-                                    }
-                                }
-                            },
-                            {
-                                field: 'form_field_def_val_strategy',
-                                minWidth: 100,
-                                title: 'Default Value Strategy',
-                                editRender: {name: 'input'}
-
-
-                            },
-                            {
-                                field: 'form_field_default_val',
-                                minWidth: 100,
-                                title: 'Default Value',
-                                editRender: {name: 'input'}
-                            }
-                        ],
-                    },
-                    {
-                        field: '',
-                        title: 'List / Table',
-                        children: [
-                            {
-                                field: 'table_field_visible',
-                                minWidth: 60,
-                                title: 'Show ?',
-                                editRender: {
-                                    name: 'ElSwitch', type: 'visible', props: {
-                                        activeValue: 1,
-                                        inactiveValue: 0,
-                                        activeColor:"green",
-                                        inactiveColor:"gray"
-                                    }
-                                }
-                            },
-                            {
-                                field: 'table_field_order_by',
-                                minWidth: 110,
-                                title: 'Default Order By',
-                                editRender: {
-                                    name: 'ElSelect',
-                                    props: {clearable: false},
-                                    options: [
-                                        {
-                                            label: 'NONE',
-                                            value: 'NONE'
-                                        }, {
-                                            label: 'DESC',
-                                            value: 'DESC'
-                                        },
-                                        {
-                                            label: 'ASC',
-                                            value: 'ASC'
-                                        }
-                                    ]
-                                }
-                            },
-                            {
-                                field: 'table_field_sequence',
-                                minWidth: 90,
-                                title: 'Sequence',
-                                editRender: {name: 'ElInputNumber', props: {max: 9999, min: 1}},
-                                sortable:true
-                            },
-                            {
-                                field: 'table_field_column_width',
-                                minWidth: 70,
-                                title: 'Width',
-                                editRender: {name: 'ElInputNumber', props: {max: 9999, min: 1}}
-                            },
-                            {
-                                field: 'table_parent_label',
-                                minWidth: 80,
-                                title: 'Parent Label',
-                                editRender: {name: 'input'}
-                            },
-                        ],
-                    },
-                    {
-                        field: '',
-                        title: 'Export',
-                        children: [
-                            {
-                                field: 'export_field_visible',
-                                minWidth: 60,
-                                title: 'Show ?',
-                                editRender: {
-                                    name: 'ElSwitch', type: 'visible', props: {
-                                        activeValue: 1,
-                                        inactiveValue: 0,
-                                        activeColor:"green",
-                                        inactiveColor:"gray"
-                                    }
-                                }
-                            },
-                            {
-                                field: 'export_field_sequence',
-                                minWidth: 90,
-                                title: 'Sequence',
-                                editRender: {name: 'ElInputNumber', props: {max: 9999, min: 1}},
-                                sortable:true
-                            },
-                            {
-                                field: 'export_field_width',
-                                minWidth: 70,
-                                title: 'Width',
-                                editRender: {name: 'ElInputNumber', props: {max: 9999, min: 1}}
-                            },
-                        ],
-                    },
-                    {
-                        type: 'width',
-                        width: 90,
-                        title: 'Operation',
-                        fixed: 'right',
-                        slots: {
-                            default: ({row}, h) => {
-                                return [
-                                    h('vxe-button', {
-                                        on: {
-                                            click: () => this.$refs.xTable.revert(row)
-                                        }
-                                    }, 'Revert')
-
-                                ]
-                            },
-                            header: ({column}, h) => {
-                                return [
-                                    h('span', {
-
-                                    }, 'Operation'),
-
-                                    h('vxe-button', {
-                                        on: {
-                                            click: () => this.$refs.xTable.revert()
-                                        }
-                                    }, 'Revert'),
-
-                                ]
-                            }
-                        }
-                    }
-                ],
                 dataLoading: false,
                 tableData: [],
 
@@ -625,7 +524,7 @@
                     id:'',
                     form_field_key:'',
                     form_df_key:'',
-                    field_type: "AUTO",
+                    field_type: "MANUAL",
                     plugin_cron:'',
                     plugin_jdbc_url:'',
                     plugin_username:'',
@@ -634,7 +533,7 @@
                     plugin_enabled:'false',
                     manual_conf:"",
                     plugin_type:'SQL',
-
+                    element_type:''
                 },
                 showTestResult:false,
                 testResult:null,
@@ -649,22 +548,23 @@
                         row.form_field_query_type == QueryFormType.SINGLE_CHOICE_LIST ||
                         row.form_field_query_type == QueryFormType.SINGLE_CHOICE_LIST_R1)){
                         if(property == 'form_field_default_val' || property == 'form_field_use_default_val' ||  property == 'form_field_def_val_strategy')
-                            // row.form_field_use_default_val = 0;
-                            // row.form_field_default_val = null;
-                            // row.form_field_def_val_strategy = '';
                             return 'color-gray';
                     }else{
-                        if(property == 'optional_dic_val' || property == 'form_field_child_field_name'){
-                            // row.optional_dic_val = null;
-                            // row.form_field_dict_domain_name = null;
-                            // row.form_field_dict_item = null;
+                        if(property == 'optional_dic_val' ){
+                            return 'color-gray';
+                        }
+                    }
 
+                    if(property == 'form_field_child_field_name'){
+                        if( row.form_field_query_type == QueryFormType.MULTIPLE_CHOICE_LIST)   {
+                            return '';
+                        }else{
                             return 'color-gray';
                         }
                     }
                     return '';
                 },
-
+                manualPlaceHolder:"Please inter a json Array"
 
             }
         },
@@ -698,9 +598,8 @@
         },
         created() {
             this.loadFormTableSettings();
+
         },
-
-
         methods: {
             refreshSetting(){
                 this.tableData =[];
@@ -713,6 +612,8 @@
                 this.http.post(url).then(resp => {
                     this.tabScreenLoading = false;
                     this.tableData = resp.data;
+
+                    this.generateTabList(this.tableData);
                 }).catch(error =>{
                     this.tabScreenLoading = false;
                 })
@@ -723,61 +624,108 @@
                 this.http.get(url).then(resp => {
                     this.tabScreenLoading = false;
                     this.tableData = resp.data;
+
+                    this.generateTabList(this.tableData);
                 }).catch(error =>{
                     this.tabScreenLoading = false;
                 })
 
             },
-            // 废弃，因为 编辑表格不能 去掉标记
-            saveOne(row) {
-                let saveDataArr = [];
-                saveDataArr.push(row);
-                this.realSaveFormTable(saveDataArr);
+            generateTabList(tableData){
+                this.childFieldConfig.options = [];
+                for(let i = 0; i< tableData.length;i ++ ){
+                    let option = {};
+                    option.value = tableData[i].db_field_name;
+                    option.label = tableData[i].db_field_name;
+                    this.childFieldConfig.options.push(option);
+                }
+
             },
             saveAll() {
-              this.realSaveFormTable(this.tableData);
-
+                let isValidate = this.validateData(this.tableData);
+                if(isValidate){
+                    this.realSaveFormTable(this.tableData);
+                }
             },
-
-            realSaveFormTable(saveDataArr) {
-                let url = this.baseUrl + 'd1-core/d1/datasource/save-df-form-table-setting';
-
+            validateData(saveDataArr){
                 for(var i in saveDataArr){
                     let rowData = saveDataArr[i];
                     let fieldName = rowData.db_field_name;
                     let queryType = rowData.form_field_query_type;
+
                     if(QueryFormType.SINGLE_CHOICE_LIST_R1 === queryType || QueryFormType.SINGLE_CHOICE_LIST === queryType
                         || QueryFormType.MULTIPLE_CHOICE_LIST === queryType){
                         if(!rowData.form_field_dict_domain_name ){
-                            this.$message.warning('Element Type like:SINGLE_CHOICE_LIST_R1,SINGLE_CHOICE_LIST,MULTIPLE_CHOICE_LIST ,Optional Values can not be empty;example:' +fieldName);
-                            return;
+                            this.$message.warning(fieldName +'\'s query Type is '+ queryType + ',Optional Values can not be empty;like:' +fieldName);
+                            return false;
                         }
-                     
-
-
+                        if(rowData.form_field_use_default_val || rowData.form_field_def_val_strategy || rowData.form_field_default_val){
+                            this.$message.warning(fieldName +'\'s query Type is '+ queryType + ', can not use Default Val');
+                            return false;
+                        }
+                    }else{
+                        if(rowData.optional_dic_val) {
+                            this.$message.warning(fieldName + '\'s query Type is ' + queryType + ', can not use Optional Values');
+                            return false;
+                        }
                     }
+
+                    if(rowData.form_field_child_field_name){
+                        if(rowData.form_field_query_type == QueryFormType.MULTIPLE_CHOICE_LIST){
+                        }else{
+                            this.$message.warning(fieldName + '\'s query Type is ' + queryType + ', can not use Optional Values');
+                            return false;
+                        }
+                    }
+
                 }
+                return true;
+            },
+            realSaveFormTable(saveDataArr) {
+                console.log(saveDataArr);
+                let url = this.baseUrl + 'd1-core/d1/datasource/save-df-form-table-setting';
                 this.tabScreenLoading = true;
                 this.http.post(url, saveDataArr).then(resp => {
                     this.tabScreenLoading = false;
-                    this.$message.success('Operation Success');
-                    this.$refs.xTable.refreshData();
 
-
+                    this.loadFormTableSettings();
                 }).catch(error =>{
                     this.tabScreenLoading = false;
                 })
             },
-            openDictionaryDialog(obj){
+            dbClickCustomOperation(obj){
                 let column = obj.column;
                 let row = obj.row;
+
                 this.clickRow = row;
                 let property = column.property;
+                let queryType = row.form_field_query_type;
 
-                let dfKey = row.df_key;
-                let fieldName = row.db_field_name;
                 if(property && property == 'optional_dic_val'){
 
+                    if(QueryFormType.SINGLE_CHOICE_LIST_R1 === queryType || QueryFormType.SINGLE_CHOICE_LIST === queryType
+                        || QueryFormType.MULTIPLE_CHOICE_LIST === queryType){
+                        this.loadDicVal();
+                    }
+
+                }else if( property && property == 'form_field_def_val_strategy'){
+                    if(QueryFormType.SINGLE_CHOICE_LIST_R1 === queryType || QueryFormType.SINGLE_CHOICE_LIST === queryType
+                        || QueryFormType.MULTIPLE_CHOICE_LIST === queryType){
+                        // do nothing
+                    }else{
+                        this.loadDefaultStrategyVal();
+                    }
+                }
+            },
+            loadDicVal(){
+                let row = this.clickRow;
+                let dfKey = row.df_key;
+                let fieldName = row.db_field_name;
+
+
+                let dictConfiguration = this.clickRow.dict_configuration;
+
+                if (!dictConfiguration){
                     let url = this.baseUrl + "d1-core/d1/form-dict-configuration?field_form_df_key=" + dfKey + "&field_form_field_key=" + fieldName;
                     this.tabScreenLoading = true;
                     this.http.get(url).then(response =>{
@@ -788,7 +736,6 @@
                         this.tabScreenLoading = false;
                         if(data){
                             // 这两个字段没有配的话可能没有，所以要在这里设置值
-
                             this.dictParams.field_domain = data.field_domain;
                             this.dictParams.field_item = data.field_item;
                             this.dictParams.field_id = data.field_id;
@@ -798,43 +745,86 @@
                     }).catch(error =>{
                         this.tabScreenLoading = false;
                     })
-                }else if( property && property == 'form_field_def_val_strategy'){
-                    this.confirmToOpenDefaultDialogVisible = true;
-                    this.loadDefaultStrategyVal(dfKey,fieldName);
-
+                }else{
+                    this.confirmToOpenDictDialogVisible = true;
+                    this.dictParams.field_form_df_key = dfKey;
+                    this.dictParams.field_form_field_key = fieldName;
+                    this.dictParams.field_domain = dictConfiguration.field_domain;
+                    this.dictParams.field_item = dictConfiguration.field_item;
+                    this.dictParams.field_id = dictConfiguration.field_id;
+                    this.dictSelect = dictConfiguration.field_domain +'-d1-' + dictConfiguration.field_item;
+                    this.handleDictQuery();
                 }
+
+
+
+
             },
-            loadDefaultStrategyVal(dfKey,fieldName){
-              this.tabScreenLoading = true;
-              let url = this.baseUrl +"d1-core/d1/defaults-configuration";
-              url += "?field_form_df_key=" + dfKey + "&field_form_field_key=" + fieldName;
-              this.defaultsConfigurationDO.form_field_key = fieldName;
-              this.defaultsConfigurationDO.form_df_key = dfKey;
-              this.http.get(url).then(resp => {
-                  this.tabScreenLoading =false;
-                  let data = resp.data;
-                  if(data){
 
-                      if(data.field_type){
-                          this.defaultsConfigurationDO.field_type = data.field_type;
-                      }
-                      if(data.plugin_type){
-                          this.defaultsConfigurationDO.plugin_type = data.plugin_type;
-                      }
 
-                      this.defaultsConfigurationDO.plugin_cron = data.plugin_cron;
-                      this.defaultsConfigurationDO.id = data.id;
-                      this.defaultsConfigurationDO.plugin_jdbc_url = data.plugin_jdbc_url;
-                      this.defaultsConfigurationDO.plugin_username = data.plugin_username;
-                      this.defaultsConfigurationDO.plugin_password = data.plugin_password;
+            loadDefaultStrategyVal(){
+                let row = this.clickRow;
+                let dfKey = row.df_key;
+                let fieldName = row.db_field_name;
+                let elementType = row.form_field_query_type;
+    
+                this.defaultsConfigurationDO.form_field_key = fieldName;
+                this.defaultsConfigurationDO.form_df_key = dfKey;
+                this.defaultsConfigurationDO.element_type = elementType;
 
-                      this.defaultsConfigurationDO.plugin_sql = data.plugin_sql;
-                      this.defaultsConfigurationDO.plugin_enable = data.plugin_enable;
-                      this.defaultsConfigurationDO.manual_conf = data.manual_conf;
-                  }
-              }).catch(error => {
-                  this.tabScreenLoading =false;
-              })
+                this.handleManualConfPlaceHolder(elementType);
+                
+                let currentDefaultsConfigurationDO = row.defaults_configuration;
+
+
+                this.confirmToOpenDefaultDialogVisible = true;
+                // 根据在前端是否save过确定是否去后端查询值
+                if(currentDefaultsConfigurationDO){
+
+                    this.defaultsConfigurationDO.field_type = currentDefaultsConfigurationDO.field_type;
+                    this.defaultsConfigurationDO.plugin_type = currentDefaultsConfigurationDO.plugin_type;
+                    this.defaultsConfigurationDO.plugin_cron = currentDefaultsConfigurationDO.plugin_cron;
+                    this.defaultsConfigurationDO.id = currentDefaultsConfigurationDO.id;
+                    this.defaultsConfigurationDO.plugin_jdbc_url = currentDefaultsConfigurationDO.plugin_jdbc_url;
+                    this.defaultsConfigurationDO.plugin_username = currentDefaultsConfigurationDO.plugin_username;
+                    this.defaultsConfigurationDO.plugin_password = currentDefaultsConfigurationDO.plugin_password;
+
+                    this.defaultsConfigurationDO.plugin_sql = currentDefaultsConfigurationDO.plugin_sql;
+                    this.defaultsConfigurationDO.plugin_enable = currentDefaultsConfigurationDO.plugin_enable;
+                    this.defaultsConfigurationDO.manual_conf = currentDefaultsConfigurationDO.manual_conf;
+
+                }else{
+                    this.tabScreenLoading = true;
+                    let url = this.baseUrl +"d1-core/d1/defaults-configuration";
+                    url += "?field_form_df_key=" + dfKey + "&field_form_field_key=" + fieldName;
+                    this.http.get(url).then(resp => {
+                        this.tabScreenLoading =false;
+                        let data = resp.data;
+                        if(data){
+                            if(data.field_type){
+                                this.defaultsConfigurationDO.field_type = data.field_type;
+                            }
+                            if(data.plugin_type){
+                                this.defaultsConfigurationDO.plugin_type = data.plugin_type;
+                            }
+
+                            this.defaultsConfigurationDO.plugin_cron = data.plugin_cron;
+                            this.defaultsConfigurationDO.id = data.id;
+                            this.defaultsConfigurationDO.plugin_jdbc_url = data.plugin_jdbc_url;
+                            this.defaultsConfigurationDO.plugin_username = data.plugin_username;
+                            this.defaultsConfigurationDO.plugin_password = data.plugin_password;
+
+                            this.defaultsConfigurationDO.plugin_sql = data.plugin_sql;
+                            this.defaultsConfigurationDO.plugin_enable = data.plugin_enable;
+                            this.defaultsConfigurationDO.manual_conf = data.manual_conf;
+                        }
+                    }).catch(error => {
+                        this.tabScreenLoading =false;
+                    })
+                }
+
+
+
 
             },
             dicFormatter(obj){
@@ -874,16 +864,19 @@
                 this.dictTotalRecord = 0;
                 this.dictPageSize = 10;
                 this.dictCurrentPage = 1;
+                this.activeNames = ["1"];
             },
             clearSelect(){
                 this.dictSelect = '';
             },
             saveDictSelect(){
-                let url = this.baseUrl + "d1-core/d1/form-dict-configuration";
 
+
+                // let url = this.baseUrl + "d1-core/d1/form-dict-configuration";
                 let formDictConfiguration = {};
                 formDictConfiguration.field_form_df_key = this.dictParams.field_form_df_key;
                 formDictConfiguration.field_form_field_key= this.dictParams.field_form_field_key;
+
 
                 let arr ;
                 if(this.dictSelect){
@@ -897,25 +890,42 @@
                     formDictConfiguration.field_id = this.dictParams.field_id;
                 }
 
-                this.tabScreenLoading = true;
-                this.http.post(url,formDictConfiguration).then(resp =>{
-                    if(arr){
-                        // -d1-是写死的，根据这个来拆分
-                        this.clickRow.form_field_dict_domain_name = arr[0];
-                        this.clickRow.form_field_dict_item = arr[1];
 
-                        this.clickRow.optional_dic_val = arr[0] +" + " + arr[1];
 
-                    }else{
-                        this.clickRow.form_field_dict_domain_name = null;
-                        this.clickRow.form_field_dict_item = null;
-                        this.clickRow.optional_dic_val = null;
-                    }
-                    this.confirmToOpenDictDialogVisible = false;
-                    this.tabScreenLoading = false;
-                }).catch(error =>{
-                    this.tabScreenLoading = false;
-                })
+
+                if(arr){
+                    // -d1-是写死的，根据这个来拆分
+                    this.clickRow.form_field_dict_domain_name = arr[0];
+                    this.clickRow.form_field_dict_item = arr[1];
+
+                    this.clickRow.optional_dic_val = arr[0] + " + " + arr[1];
+
+                }else{
+                    this.clickRow.form_field_dict_domain_name = null;
+                    this.clickRow.form_field_dict_item = null;
+                    this.clickRow.optional_dic_val = '';
+                }
+                this.clickRow.dict_configuration =  formDictConfiguration;
+                this.confirmToOpenDictDialogVisible = false;
+                //
+                // this.http.post(url,formDictConfiguration).then(resp =>{
+                //     if(arr){
+                //         // -d1-是写死的，根据这个来拆分
+                //         this.clickRow.form_field_dict_domain_name = arr[0];
+                //         this.clickRow.form_field_dict_item = arr[1];
+                //
+                //         this.clickRow.optional_dic_val = arr[0] +" + " + arr[1];
+                //
+                //     }else{
+                //         this.clickRow.form_field_dict_domain_name = null;
+                //         this.clickRow.form_field_dict_item = null;
+                //         this.clickRow.optional_dic_val = '';
+                //     }
+                //     this.confirmToOpenDictDialogVisible = false;
+                //     this.tabScreenLoading = false;
+                // }).catch(error =>{
+                //     this.tabScreenLoading = false;
+                // })
 
             },
             openPreviewPage(){
@@ -938,7 +948,6 @@
             },
             saveDefaultSelect(){
                 let url = this.baseUrl + 'd1-core/d1/defaults-configuration';
-
                 // 校验输入的为json数组
                 if(this.defaultsConfigurationDO.field_type =='MANUAL'){
                     let manualVal = this.defaultsConfigurationDO.manual_conf;
@@ -959,35 +968,49 @@
                 }
 
 
-                this.tabScreenLoading = true;
-                this.http.post(url, this.defaultsConfigurationDO).then(resp =>{
-                    this.clickRow.form_field_def_val_strategy = this.defaultsConfigurationDO.field_type;
+                // 回填值
+                this.clickRow.form_field_def_val_strategy = this.defaultsConfigurationDO.field_type;
+                if(this.defaultsConfigurationDO.field_type =='MANUAL'){
+                    this.clickRow.form_field_default_val = this.defaultsConfigurationDO.manual_conf;
+                }
 
-                    if(this.defaultsConfigurationDO.field_type =='MANUAL'){
-                        this.clickRow.form_field_default_val = this.defaultsConfigurationDO.manual_conf;
-                    }
 
-                    this.tabScreenLoading =false;
-                    this.confirmToOpenDefaultDialogVisible =false;
-                }).catch(error =>{
-                    this.tabScreenLoading = false;
-                })
+
+                let currentDefaultsConfiguration = util.deepClone(this.defaultsConfigurationDO);
+                this.clickRow.defaults_configuration = currentDefaultsConfiguration;
+                this.confirmToOpenDefaultDialogVisible = false;
+
+
+                // 不进行实际的保存操作
+                // this.tabScreenLoading = true;
+                // this.http.post(url, this.defaultsConfigurationDO).then(resp =>{
+                //     this.clickRow.form_field_def_val_strategy = this.defaultsConfigurationDO.field_type;
+                //
+                //     if(this.defaultsConfigurationDO.field_type =='MANUAL'){
+                //         this.clickRow.form_field_default_val = this.defaultsConfigurationDO.manual_conf;
+                //     }
+                //
+                //     this.tabScreenLoading =false;
+                //     this.confirmToOpenDefaultDialogVisible =false;
+                // }).catch(error =>{
+                //     this.tabScreenLoading = false;
+                // })
 
             },
             closeDefaultMethod(){
                 this.defaultsConfigurationDO = {
                     id:'',
-                        form_field_key:'',
-                        form_df_key:'',
-                        field_type: "AUTO",
-                        plugin_cron:'',
-                        plugin_jdbc_url:'',
-                        plugin_username:'',
-                        plugin_password:'',
-                        plugin_sql:'',
-                        plugin_enabled:'false',
-                        manual_conf:"",
-                        plugin_type:'SQL'
+                    form_field_key:'',
+                    form_df_key:'',
+                    field_type: "MANUAL",
+                    plugin_cron:'',
+                    plugin_jdbc_url:'',
+                    plugin_username:'',
+                    plugin_password:'',
+                    plugin_sql:'',
+                    plugin_enabled:'false',
+                    manual_conf:"",
+                    plugin_type:'SQL'
                 };
                 this.showTestResult = false;
                 this.testResult = null;
@@ -999,33 +1022,41 @@
                     this.showTestResult = true;
                     this.tabScreenLoading = false;
                     let data = resp.data;
-
                     this.testResult = data;
-
-
                 }).catch(error =>{
                     this.tabScreenLoading = false;
                 })
             },
-            // 交互
-            activeCellMethod(obj){
-                return false;
-                // let row = obj.row;
-                // let column = obj.column;
-                // let property = column.property;
-                // // 颜色更改
-                // if ((row.form_field_query_type == QueryFormType.MULTIPLE_CHOICE_LIST ||
-                //     row.form_field_query_type == QueryFormType.SINGLE_CHOICE_LIST ||
-                //     row.form_field_query_type == QueryFormType.SINGLE_CHOICE_LIST_R1)){
-                //     if(property == 'form_field_default_val' || property == 'form_field_use_default_val' ||  property == 'form_field_def_val_strategy')
-                //
-                //         return true;
-                // }else{
-                //     if(property == 'optional_dic_val' || property == 'form_field_child_field_name'){
-                //         return false;
-                //     }
-                // }
-                // return true;
+            revertRow(scope){
+                this.$refs.xTable.revert(scope.row);
+            },
+            revertTable(){
+                this.$refs.xTable.revert();
+            },
+            handleDictReset(){
+                this.dictCurrentPage = 1;
+                this.dictParams.field_domain ='';
+                this.dictParams.field_item = '';
+                this.dictParams.field_value = '';
+                this.handleDictQuery();
+            },
+            handleManualConfPlaceHolder(elementType){
+                if(QueryFormType.MULTIPLE_CHOICE_LIST == elementType){
+                    this.manualPlaceHolder = 'for example : ["value1","value2"]';
+                }else if(QueryFormType.SINGLE_CHOICE_LIST == elementType || QueryFormType.SINGLE_CHOICE_LIST_R1 == elementType){
+                    this.manualPlaceHolder = 'for example : ["value1"]';
+                }else if (QueryFormType.SINGLE_DATE == elementType){
+                    this.manualPlaceHolder = 'for example : ["1970-01-01"]';
+                } else if(QueryFormType.DATE_RANGE == elementType){
+                    this.manualPlaceHolder = 'for example : ["1970-01-01","2010-01-09"]';
+                }else if (QueryFormType.SINGLE_DATETIME == elementType){
+                    this.manualPlaceHolder = 'for example : ["1970-01-01 00:00:00"]';
+                }else if (QueryFormType.DATE_TIME_RANGE == elementType){
+                    this.manualPlaceHolder = 'for example : ["1970-01-01 00:00:00","1970-01-01 08:00:00"]';
+                }else{
+                    this.manualPlaceHolder = 'for example : ["inputValue"]';
+                }
+
             }
 
         }
