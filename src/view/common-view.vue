@@ -17,7 +17,7 @@
                 <el-tab-pane label="Main">
                     <div class="area-one">
                         <div class ="area">
-                            <d1-vue-component ref="basicForm" :options="generateOption"></d1-vue-component>
+                            <d1-vue-component ref="basicForm" :options="generateOption" :dataFacetKey="dfKey" :d1CoreBaseUrl="d1CoreBaseUrl"></d1-vue-component>
                         </div>
                     </div>
                 </el-tab-pane>
@@ -45,9 +45,9 @@
         data() {
             return {
                 generateOption: {
-                    queryUrl: this.baseUrl + 'd1-core/d1/query-suite/execute-query' ,
+                    queryUrl: 'd1-core/d1/query-suite/execute-query' ,
                     importUrl: '',
-                    exportUrl: this.baseUrl + 'd1-core/d1/export/async-export',
+                    exportUrl: 'd1-core/d1/export/async-export',
                     deleteUrl: '',
                     modifyUrl: '',
                     pageSize: 10,
@@ -90,6 +90,14 @@
                     // ]
                 },
                 dfKey : ''
+            }
+        },
+        computed: {
+            d1CoreBaseUrl(){
+                return this.baseUrl;
+            },
+            d1ClientBaseUrl(){
+                return "";
             }
         },
         methods:{

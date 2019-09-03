@@ -53,7 +53,7 @@ axios.interceptors.response.use(resp => {
 })
 
 
-axios.defaults.baseURL = window.baseConfig.baseUrl
+// axios.defaults.baseURL = window.baseConfig.baseUrl
 
 axios.defaults.headers = {
   'X-Requested-With': 'XMLHttpRequest'

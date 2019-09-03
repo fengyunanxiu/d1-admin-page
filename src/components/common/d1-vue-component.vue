@@ -358,6 +358,21 @@
         default: () => {
         }
       },
+      dataFacetKey:{
+          type: String,
+          required: true,
+          default: () => ''
+      },
+      d1CoreBaseUrl:{
+          type: String,
+          required: true,
+          default: () => ''
+      },
+      d1ClientBaseUrl:{
+          type: String,
+          required: false,
+          default: () => ''
+      },
     },
     components: {},
     data() {
@@ -424,7 +439,6 @@
         loadFormTableOnCreate: true, //是否初始化完成以后立即加载form
         openform:false, //是否展开form区域
         showDownloadButton: false,
-        dataFacetKey: '', // data face key
         toolbarPlaceholder: [], //界面显示描述
         asyncExport: false, //是否异步导出
         dataLoading: false,
@@ -469,11 +483,16 @@
             optionalValue: '__SPECIAL_FORM_TYPE_CHOICE_NULL_OR_EMPTY__',
             optionalLabel: 'Null Or Empty'
         },
+
+
       }
     },
     computed: {
+      baseUrl() {
+          return this.d1ClientBaseUrl ? this.d1ClientBaseUrl : this.d1CoreBaseUrl;
+      },
       fullQueryUrl() {
-        let url = this.queryUrl ;
+        let url = this.baseUrl + this.queryUrl ;
         url += (url.indexOf("?") !== -1) ? "&" : "?";
         url += "data_facet_key=" + this.dataFacetKey;
         url += "&" + this.pageParam;
@@ -490,7 +509,7 @@
         return url;
       },
       fullFormTableUrl() {
-        let url = this.formTableUrl;
+        let url = this.d1CoreBaseUrl + this.formTableUrl;
         url += '?data_facet_key=' + this.dataFacetKey;
         return url;
       },
@@ -709,33 +728,6 @@
         }
         return url;
       },
-      pagingAccounted() {
-        let span = 24;
-        if (this.showUploadButton) {
-          span -= 2;
-        }
-        if (this.showExportButton) {
-          span -= 2;
-        }
-        if (this.showAnalyzeButton) {
-          span -= 2;
-        }
-        if (this.showDeleteButton) {
-          span -= 2;
-        }
-        if (this.showAddButton) {
-          span -= 2;
-        }
-        if (this.showRefreshButton) {
-          span -= 2;
-        }
-        if (this.showToolbarButtonList && this.toolbarButtonList.length > 0) {
-          for (let i = 0; i < this.toolbarButtonList.length; i++) {
-            span -= this.toolbarButtonList[i].elColWidth;
-          }
-        }
-        return span;
-      },
       definitionTableButtonWidth(){
         let width = 0;
         if(this.tableOperationButtonList && this.tableOperationButtonList.length > 0){
@@ -750,9 +742,6 @@
           }
         }
         return width;
-      },
-      buttonAccounted() {
-        return 24 - this.pagingAccounted;
       },
       defultSelectRows() {
         if (this.tableData == null || this.tableData.length === 0) {
@@ -994,14 +983,13 @@
         this.uploadUrl = options.uploadUrl != null ? options.uploadUrl : this.uploadUrl; //导出文件的url
         this.deleteUrl = options.deleteUrl != null ? options.deleteUrl : this.deleteUrl; //删除功能
         this.tableOperationButtonList = options.tableOperationButtonList != null ? options.tableOperationButtonList : this.tableOperationButtonList; //表格内按钮组
-        this.dataFacetKey = options.dataFacetKey != null ? options.dataFacetKey : this.dataFacetKey; //data source key
         if (options.pageSize) {
           this.pageSize = options.pageSize;//可以修改默认的每页数量 默认 10
         }
 
           this.loadFormTableOnCreate = options.loadFormTableOnCreate != null ? options.loadFormTableOnCreate : this.loadFormTableOnCreate;
 
-          this.pageSettingData = options.pageSettingData != null ? options.pageSettingData : this.pageSettingData;
+        this.pageSettingData = options.pageSettingData != null ? options.pageSettingData : this.pageSettingData;
         this.showUploadButton = options.showUploadButton != null ? options.showUploadButton : this.showUploadButton;
         this.showTableSelection = options.showTableSelection != null ? options.showTableSelection : this.showTableSelection;
         this.showTableOperationButton = options.showTableOperationButton != null ? options.showTableOperationButton : this.showTableOperationButton;

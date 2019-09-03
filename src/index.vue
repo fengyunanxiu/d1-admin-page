@@ -36,7 +36,7 @@
 
                     <div class="area-two" v-show="showD1VueComponent">
                         <div class ="area">
-                            <d1-vue-component ref="d1VueComponet" :options="generateOption"
+                            <d1-vue-component ref="d1VueComponet" :options="generateOption" :dataFacetKey="dsFacetKey" :d1CoreBaseUrl="d1CoreBaseUrl"
                                 @onToolbarButtonClick="handleToolbarButtonClick"
                                 @onTableOperationButtonClick="onTableOperationButtonClick"
                                 @handleTableDataFormatter="handleTableDataFormatter"
@@ -56,8 +56,8 @@
     import d1VueComponent from '@/components/common/d1-vue-component.vue'
 
     let generateOption = {
-        queryUrl: window.baseConfig.baseUrl + '/d1-client/d1/client/executeQuery?' ,
-            exportUrl: window.baseConfig.baseUrl + '/d1-client/d1/query-suite/executeQuery?',
+            queryUrl: 'd1-core/d1/query-suite/execute-query' ,
+            exportUrl: '/d1-client/d1/query-suite/executeQuery',
             showExportButton: true,
             pageSize: 10,
             tableData: [{}],
@@ -120,9 +120,16 @@
             }
         },
         computed: {
-
+            d1CoreBaseUrl(){
+                return this.baseUrl;
+            },
+            d1ClientBaseUrl(){
+                return "";
+            },
         },
         methods:{
+
+
             handleToolbarButtonClick(name){
                 console.info(name);
             },
@@ -145,6 +152,7 @@
                     this.$refs.d1VueComponet.loadFormTableSetting();
                     this.$refs.d1VueComponet.runQuery();
                 }catch (data) {
+                    console.info(data);
                     this.$message.warning('Failed to initialize component: invalid parameter');
                 }
 
